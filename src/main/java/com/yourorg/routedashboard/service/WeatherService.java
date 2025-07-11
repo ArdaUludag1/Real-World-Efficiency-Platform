@@ -13,7 +13,7 @@ public class WeatherService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     
-    @Value("${openweather.api.key}")
+    @Value("${openweather.api.key:YOUR_OPENWEATHER_API_KEY}")
     private String openWeatherApiKey;
     
     // Explicit constructor
@@ -23,6 +23,12 @@ public class WeatherService {
     }
 
     public String getWeatherData(String city) {
+        // Check if API key is valid
+        if (openWeatherApiKey == null || openWeatherApiKey.equals("YOUR_OPENWEATHER_API_KEY") || openWeatherApiKey.trim().isEmpty()) {
+            System.out.println("OpenWeatherMap API key not configured, using fallback weather data");
+            return "Sunny, 22°C, 60% humidity";
+        }
+        
         try {
             String url = String.format(
                 "http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric",

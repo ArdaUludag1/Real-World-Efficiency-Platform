@@ -52,6 +52,9 @@ public class RouteService {
             .createdAt(LocalDateTime.now())
             .build();
         
+        // Save the vehicle to the database first
+        vehicle = vehicleRepository.save(vehicle);
+        
         // Calculate distance (simplified - in real app, use Google Maps API)
         double distance = calculateDistance(request.getFromCity(), request.getToCity());
         
