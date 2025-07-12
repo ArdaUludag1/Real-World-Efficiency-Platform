@@ -26,10 +26,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/login", "/register", "/", "/index").permitAll()
+                .requestMatchers("/api/vehicles/**").permitAll()
+                .requestMatchers("/login", "/register", "/", "/index", "/dashboard", "/cars", "/trips", "/benchmark", "/settings").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                 .requestMatchers("/api/**").authenticated()
-                .requestMatchers("/dashboard/**").authenticated()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)

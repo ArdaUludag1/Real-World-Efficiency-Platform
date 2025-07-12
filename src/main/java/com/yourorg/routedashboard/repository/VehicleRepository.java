@@ -18,4 +18,11 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     List<String> findModelsByMakeAndYear(@Param("make") String make, @Param("year") Integer year);
     
     Vehicle findByMakeAndModelAndYear(String make, String model, Integer year);
+    
+    List<Vehicle> findByMake(String make);
+    
+    List<Vehicle> findByMakeAndYear(String make, Integer year);
+    
+    // Method to clear all vehicles
+    void deleteAll();
 } 

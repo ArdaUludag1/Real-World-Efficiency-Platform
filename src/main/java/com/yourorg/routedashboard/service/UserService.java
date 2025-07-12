@@ -5,23 +5,23 @@ import com.yourorg.routedashboard.dto.LoginRequest;
 import com.yourorg.routedashboard.dto.RegisterRequest;
 import com.yourorg.routedashboard.entity.User;
 import com.yourorg.routedashboard.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
-@RequiredArgsConstructor
-public class UserService {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    
-    // Explicit constructor
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+import java.util.Optional;
 
+@Service
+public class UserService {
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    // Authentication methods
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -47,5 +47,46 @@ public class UserService {
             throw new RuntimeException("Invalid credentials");
         }
         return new AuthResponse(user.getUsername(), user.getEmail(), null);
+    }
+    
+    // User management methods
+    // Get user by ID
+    public Optional<User> getUserById(Long id) {
+        return userRepository.findById(id);
+    }
+    
+    // Get user by username
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+    
+    // Get user by email
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+    
+    // Save or update user
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+    
+    // Update user
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
+    
+    // Delete user
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+    
+    // Check if username exists
+    public boolean usernameExists(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
+    
+    // Check if email exists
+    public boolean emailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
     }
 } 

@@ -31,4 +31,19 @@ CREATE TABLE IF NOT EXISTS history (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+);
+
+-- Trip table (stores user trip data)
+CREATE TABLE IF NOT EXISTS trip (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    make VARCHAR(50) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    year SMALLINT NOT NULL,
+    from_city VARCHAR(100) NOT NULL,
+    to_city VARCHAR(100) NOT NULL,
+    distance_km DOUBLE NOT NULL,
+    fuel_consumption_actual DOUBLE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ); 

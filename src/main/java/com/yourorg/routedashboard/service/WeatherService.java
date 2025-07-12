@@ -26,7 +26,7 @@ public class WeatherService {
         // Check if API key is valid
         if (openWeatherApiKey == null || openWeatherApiKey.equals("YOUR_OPENWEATHER_API_KEY") || openWeatherApiKey.trim().isEmpty()) {
             System.out.println("OpenWeatherMap API key not configured, using fallback weather data");
-            return "Sunny, 22°C, 60% humidity";
+            return getFallbackWeatherData(city);
         }
         
         try {
@@ -68,8 +68,46 @@ public class WeatherService {
             System.err.println("Error fetching weather data from OpenWeatherMap: " + e.getMessage());
         }
         
-        // Fallback to mock weather if API fails
-        return "Sunny, 22°C, 60% humidity";
+        // Fallback to varied weather if API fails
+        return getFallbackWeatherData(city);
+    }
+    
+    private String getFallbackWeatherData(String city) {
+        // Generate varied weather data based on city name
+        String cityLower = city.toLowerCase().trim();
+        int cityHash = Math.abs(cityLower.hashCode());
+        
+        // Different weather patterns based on city hash
+        String[] weatherTypes = {
+            "Sunny", "Cloudy", "Partly cloudy", "Overcast", "Light rain", 
+            "Heavy rain", "Snow", "Foggy", "Clear", "Stormy"
+        };
+        
+        String[] descriptions = {
+            "clear sky", "scattered clouds", "broken clouds", "overcast clouds",
+            "light rain", "moderate rain", "heavy rain", "light snow", "fog", "thunderstorm"
+        };
+        
+        int weatherIndex = cityHash % weatherTypes.length;
+        int descIndex = cityHash % descriptions.length;
+        
+        // Generate temperature based on city hash (between -10 and 35°C)
+        double temperature = -10.0 + (cityHash % 45);
+        
+        // Generate humidity based on weather type
+        int humidity;
+        if (weatherTypes[weatherIndex].toLowerCase().contains("rain") || 
+            weatherTypes[weatherIndex].toLowerCase().contains("snow")) {
+            humidity = 70 + (cityHash % 30); // 70-100% for precipitation
+        } else if (weatherTypes[weatherIndex].toLowerCase().contains("sunny") || 
+                   weatherTypes[weatherIndex].toLowerCase().contains("clear")) {
+            humidity = 30 + (cityHash % 40); // 30-70% for clear weather
+        } else {
+            humidity = 50 + (cityHash % 30); // 50-80% for cloudy weather
+        }
+        
+        return String.format("%s, %.1f°C, %d%% humidity", 
+            descriptions[descIndex], temperature, humidity);
     }
     
     public boolean hasPrecipitation(String weather) {
