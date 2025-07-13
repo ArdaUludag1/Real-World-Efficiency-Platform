@@ -8,7 +8,17 @@ public class WebController {
 
     @GetMapping("/")
     public String home() {
-        return "login";
+        return "home";
+    }
+
+    @GetMapping("/home")
+    public String homePage() {
+        return "home";
+    }
+
+    @GetMapping("/test-home")
+    public String testHomePage() {
+        return "home-test";
     }
 
     @GetMapping("/login")

@@ -1,14 +1,7 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
-    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark" 
-         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark" 
+     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/dashboard">
+            <a class="navbar-brand fw-bold" href="/home">
                 <i class="fas fa-route me-2"></i>RWE Platform
             </a>
             
@@ -19,29 +12,34 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/dashboard}" th:classappend="${#httpServletRequest.requestURI == '/dashboard' ? 'active' : ''}">
+                        <a class="nav-link" href="/home">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard">
                             <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/cars}" th:classappend="${#httpServletRequest.requestURI == '/cars' ? 'active' : ''}">
+                        <a class="nav-link" href="/cars">
                             <i class="fas fa-car me-1"></i>Cars
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/trips}" th:classappend="${#httpServletRequest.requestURI == '/trips' ? 'active' : ''}">
+                        <a class="nav-link" href="/trips">
                             <i class="fas fa-route me-1"></i>Trips
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/benchmark}" th:classappend="${#httpServletRequest.requestURI == '/benchmark' ? 'active' : ''}">
+                        <a class="nav-link" href="/benchmark">
                             <i class="fas fa-chart-line me-1"></i>Benchmark
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/settings}" th:classappend="${#httpServletRequest.requestURI == '/settings' ? 'active' : ''}">
+                        <a class="nav-link" href="/settings">
                             <i class="fas fa-cog me-1"></i>Settings
                         </a>
                     </li>
@@ -68,7 +66,7 @@
         </div>
     </nav>
     
-    <script th:inline="javascript">
+    <script>
         function logout() {
             fetch('/api/auth/logout', {
                 method: 'POST',
@@ -81,6 +79,4 @@
                 window.location.href = '/login';
             });
         }
-    </script>
-</body>
-</html> 
+    </script> 

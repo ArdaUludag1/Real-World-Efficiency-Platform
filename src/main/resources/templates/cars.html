@@ -47,78 +47,11 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-        .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .footer {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
     </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/dashboard">
-                <i class="fas fa-route me-2"></i>RWE Platform
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-                    data-bs-target="#navbarNav" aria-controls="navbarNav" 
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/cars">
-                            <i class="fas fa-car me-1"></i>Cars
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/trips">
-                            <i class="fas fa-route me-1"></i>Trips
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/benchmark">
-                            <i class="fas fa-chart-line me-1"></i>Benchmark
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/settings">
-                            <i class="fas fa-cog me-1"></i>Settings
-                        </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" 
-                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user me-1"></i>Account
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/settings">
-                                <i class="fas fa-user-cog me-2"></i>Profile
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/login">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
     
     <!-- Main Content -->
     <div class="container mt-4">
@@ -236,46 +169,7 @@
     </div>
     
     <!-- Footer -->
-    <footer class="footer mt-auto py-3">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="fw-bold mb-2">
-                        <i class="fas fa-route me-2"></i>RWE Platform
-                    </h6>
-                    <p class="small mb-0">Real-World Efficiency Platform</p>
-                    <p class="small mb-0">Track your vehicle efficiency and optimize your journeys.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <div class="row">
-                        <div class="col-6 col-md-3 mb-2">
-                            <a href="#" class="text-white text-decoration-none small">
-                                <i class="fas fa-info-circle me-1"></i>About Us
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 mb-2">
-                            <a href="#" class="text-white text-decoration-none small">
-                                <i class="fas fa-envelope me-1"></i>Contact
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 mb-2">
-                            <a href="#" class="text-white text-decoration-none small">
-                                <i class="fas fa-question-circle me-1"></i>Help
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3 mb-2">
-                            <a href="#" class="text-white text-decoration-none small">
-                                <i class="fas fa-shield-alt me-1"></i>Privacy
-                            </a>
-                        </div>
-                    </div>
-                    <p class="small mb-0 mt-2">
-                        © 2024 RWE Platform. All rights reserved.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <div th:replace="~{fragments/footer :: footer}"></div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
