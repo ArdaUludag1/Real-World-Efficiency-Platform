@@ -1,11 +1,11 @@
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\config\JwtAuthenticationFilter.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\config\JwtUtil.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\config\PasswordConfig.java
+C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\config\RestTemplateConfig.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\config\SecurityConfig.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\config\WebConfig.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\controller\AuthController.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\controller\BenchmarkController.java
-C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\controller\CarController.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\controller\DashboardController.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\controller\HistoryController.java
 C:\Users\ardau\Desktop\real-efficiency-platform\src\main\java\com\yourorg\routedashboard\controller\RouteController.java

@@ -19,20 +19,30 @@ public class VehicleController {
     }
 
     @GetMapping("/makes")
-    public ResponseEntity<List<String>> getMakes() {
-        List<String> makes = vehicleService.getAllMakes();
-        return ResponseEntity.ok(makes);
-    }
-
-    @GetMapping("/years")
-    public ResponseEntity<List<Integer>> getYears(@RequestParam String make) {
-        List<Integer> years = vehicleService.getYearsByMake(make);
-        return ResponseEntity.ok(years);
+    public List<String> getMakes(@RequestParam Integer year) {
+        List<String> makes = vehicleService.getMakesByYear(year);
+        System.out.println("Returned makes for year " + year + ": " + makes);
+        return makes;
     }
 
     @GetMapping("/models")
-    public ResponseEntity<List<String>> getModels(@RequestParam String make, @RequestParam Integer year) {
-        List<String> models = vehicleService.getModelsByMakeAndYear(make, year);
-        return ResponseEntity.ok(models);
+    public List<String> getModels(@RequestParam Integer year, @RequestParam String make) {
+        List<String> models = vehicleService.getModelsByYearAndMake(year, make);
+        System.out.println("Returned models for year " + year + ", make " + make + ": " + models);
+        return models;
+    }
+
+    @GetMapping("/trims")
+    public List<String> getTrims(@RequestParam Integer year, @RequestParam String make, @RequestParam String model) {
+        List<String> trims = vehicleService.getTrimsByMakeModelYear(make, model, year);
+        System.out.println("Returned trims for year " + year + ", make " + make + ", model " + model + ": " + trims);
+        return trims;
+    }
+
+    @GetMapping("/details")
+    public Object getVehicleDetails(@RequestParam Integer year, @RequestParam String make, @RequestParam String model, @RequestParam String trim) {
+        var details = vehicleService.getVehicleDetails(make, model, trim, year);
+        System.out.println("Returned details for year " + year + ", make " + make + ", model " + model + ", trim " + trim + ": " + details);
+        return details;
     }
 } 

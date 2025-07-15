@@ -18,6 +18,7 @@ com\yourorg\routedashboard\config\JwtAuthenticationFilter.class
 com\yourorg\routedashboard\dto\BenchmarkResult.class
 com\yourorg\routedashboard\controller\BenchmarkController.class
 com\yourorg\routedashboard\repository\VehicleRepository.class
+com\yourorg\routedashboard\config\RestTemplateConfig.class
 com\yourorg\routedashboard\RouteDashboardApplication.class
 com\yourorg\routedashboard\controller\SettingsController.class
 com\yourorg\routedashboard\dto\RouteRequest.class
@@ -36,7 +37,6 @@ com\yourorg\routedashboard\dto\SettingsRequest.class
 com\yourorg\routedashboard\entity\History.class
 com\yourorg\routedashboard\entity\Trip.class
 com\yourorg\routedashboard\service\HistoryService.class
-com\yourorg\routedashboard\controller\CarController.class
 com\yourorg\routedashboard\service\WeatherService.class
 com\yourorg\routedashboard\dto\LoginRequest.class
 com\yourorg\routedashboard\dto\TripRequest.class

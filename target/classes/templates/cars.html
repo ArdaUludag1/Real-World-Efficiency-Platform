@@ -47,11 +47,77 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .api-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .form-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .details-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-top: 20px;
+        }
+        .detail-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .detail-value {
+            color: #6c757d;
+        }
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .specs-card {
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .specs-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
     <!-- Navbar -->
     <div th:replace="~{fragments/navbar :: navbar}"></div>
+    
+    <!-- API Status Indicator -->
+    <div class="api-status">
+        <div class="alert alert-info alert-dismissible fade show" role="alert" id="apiStatus">
+            <i class="fas fa-satellite-dish me-2"></i>
+            <span id="apiStatusText">Connected to CarQueryAPI</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
     
     <!-- Main Content -->
     <div class="container mt-4">
@@ -62,28 +128,17 @@
                     <i class="fas fa-car me-3"></i>
                     Available Cars
                 </h1>
-                <p class="lead text-muted">Browse and explore our comprehensive collection of vehicle models</p>
+                <p class="lead text-muted">Browse and explore our comprehensive collection of vehicle models from CarQueryAPI</p>
             </div>
         </div>
         
         <!-- Filter Section -->
         <div class="filter-section">
-            <form method="get" action="/cars" class="row g-3">
-                <div class="col-md-4">
-                    <label for="make" class="form-label fw-bold">Make</label>
-                    <select class="form-select" id="make" name="make">
-                        <option value="">All Makes</option>
-                        <option th:each="make : ${makes}" 
-                                th:value="${make}" 
-                                th:text="${make}"
-                                th:selected="${make == selectedMake}">
-                        </option>
-                    </select>
-                </div>
-                <div class="col-md-4">
+            <form id="filterForm" class="row g-3">
+                <div class="col-md-2">
                     <label for="year" class="form-label fw-bold">Year</label>
-                    <select class="form-select" id="year" name="year">
-                        <option value="">All Years</option>
+                    <select class="form-select" id="year" name="year" required>
+                        <option value="">Select Year</option>
                         <option th:each="year : ${years}" 
                                 th:value="${year}" 
                                 th:text="${year}"
@@ -91,86 +146,508 @@
                         </option>
                     </select>
                 </div>
+                <div class="col-md-2">
+                    <label for="make" class="form-label fw-bold">Make</label>
+                    <select class="form-select" id="make" name="make" required disabled>
+                        <option value="">Select Make</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="model" class="form-label fw-bold">Model</label>
+                    <select class="form-select" id="model" name="model" required disabled>
+                        <option value="">Select Model</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="trim" class="form-label fw-bold">Trim</label>
+                    <select class="form-select" id="trim" name="trim" required disabled>
+                        <option value="">Select Trim</option>
+                    </select>
+                </div>
                 <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-filter me-1"></i>
-                        Filter
+                    <button type="submit" class="btn btn-primary me-2" id="searchBtn">
+                        <i class="fas fa-search me-1"></i>
+                        Search
                     </button>
-                    <a href="/cars" class="btn btn-outline-secondary">
+                    <button type="button" class="btn btn-outline-secondary" id="clearBtn">
                         <i class="fas fa-times me-1"></i>
                         Clear
-                    </a>
+                    </button>
                 </div>
             </form>
         </div>
         
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Fetching vehicle data from CarQueryAPI...</p>
+        </div>
+        
         <!-- Results Summary -->
-        <div class="row mb-4">
+        <div class="row mb-4" id="resultsSummary" style="display: none;">
             <div class="col-12">
                 <div class="alert alert-info" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 15px;">
                     <i class="fas fa-info-circle me-2"></i>
-                    Showing <strong th:text="${vehicles.size()}">0</strong> vehicles
-                    <span th:if="${selectedMake}">for <strong th:text="${selectedMake}"></strong></span>
-                    <span th:if="${selectedYear}">from <strong th:text="${selectedYear}"></strong></span>
+                    <span id="resultsText">Showing vehicle details</span>
                 </div>
             </div>
         </div>
         
-        <!-- Cars Grid -->
-        <div class="row" th:if="${!vehicles.empty}">
-            <div class="col-lg-4 col-md-6 mb-4" th:each="vehicle : ${vehicles}">
-                <div class="car-card h-100">
-                    <div class="car-image d-flex align-items-center justify-content-center">
-                        <i class="fas fa-car fa-3x text-white"></i>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold" th:text="${vehicle.make + ' ' + vehicle.model}">
-                            Car Name
-                        </h5>
-                        <p class="card-text text-muted">
-                            <i class="fas fa-calendar me-1"></i>
-                            <span th:text="${vehicle.year}">Year</span>
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge bg-primary">
-                                <i class="fas fa-tag me-1"></i>
-                                Available
-                            </span>
-                            <small class="text-muted">
-                                <i class="fas fa-database me-1"></i>
-                                ID: <span th:text="${vehicle.id}">0</span>
-                            </small>
+        <!-- Vehicle Details -->
+        <div class="row" id="vehicleDetails" style="display: none;">
+            <div class="col-12">
+                <div class="car-card p-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="car-image d-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-car fa-3x text-white"></i>
+                            </div>
+                            <div class="text-center">
+                                <h3 class="fw-bold" id="selectedCarName">Select a vehicle</h3>
+                                <p class="text-muted mb-3">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <span id="selectedCarYear">-</span>
+                                </p>
+                                <span class="badge bg-success mb-3">
+                                    <i class="fas fa-check me-1"></i>
+                                    Available
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="card-footer bg-transparent border-0">
-                        <a href="/trips" class="btn btn-outline-primary btn-sm w-100">
-                            <i class="fas fa-plus me-1"></i>
-                            Select for Trip
-                        </a>
+                        <div class="col-md-8">
+                            <div class="specs-grid">
+                                <!-- Basic Info -->
+                                <div class="specs-card">
+                                    <div class="specs-title">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Basic Information
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Make:</span>
+                                        <span class="detail-value" id="detailMake">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Model:</span>
+                                        <span class="detail-value" id="detailModel">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Trim:</span>
+                                        <span class="detail-value" id="detailTrim">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Body Type:</span>
+                                        <span class="detail-value" id="detailBodyType">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Doors:</span>
+                                        <span class="detail-value" id="detailDoors">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Seats:</span>
+                                        <span class="detail-value" id="detailSeats">-</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Engine & Performance -->
+                                <div class="specs-card">
+                                    <div class="specs-title">
+                                        <i class="fas fa-cog me-1"></i>
+                                        Engine & Performance
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Engine Type:</span>
+                                        <span class="detail-value" id="detailEngineType">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Engine Size:</span>
+                                        <span class="detail-value" id="detailEngineSize">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Cylinders:</span>
+                                        <span class="detail-value" id="detailCylinders">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Transmission:</span>
+                                        <span class="detail-value" id="detailTransmission">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">0-100 km/h:</span>
+                                        <span class="detail-value" id="detailAcceleration">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Top Speed:</span>
+                                        <span class="detail-value" id="detailTopSpeed">-</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Fuel & Efficiency -->
+                                <div class="specs-card">
+                                    <div class="specs-title">
+                                        <i class="fas fa-gas-pump me-1"></i>
+                                        Fuel & Efficiency
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">City (L/100km):</span>
+                                        <span class="detail-value" id="detailFuelCity">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Highway (L/100km):</span>
+                                        <span class="detail-value" id="detailFuelHighway">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Mixed (L/100km):</span>
+                                        <span class="detail-value" id="detailFuelMixed">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Fuel Capacity:</span>
+                                        <span class="detail-value" id="detailFuelCapacity">-</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Dimensions -->
+                                <div class="specs-card">
+                                    <div class="specs-title">
+                                        <i class="fas fa-ruler-combined me-1"></i>
+                                        Dimensions
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Length:</span>
+                                        <span class="detail-value" id="detailLength">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Width:</span>
+                                        <span class="detail-value" id="detailWidth">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Height:</span>
+                                        <span class="detail-value" id="detailHeight">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Wheelbase:</span>
+                                        <span class="detail-value" id="detailWheelbase">-</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Weight:</span>
+                                        <span class="detail-value" id="detailWeight">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <a href="/trips" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Select for Trip
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                                    <i class="fas fa-refresh me-1"></i>
+                                    Search Another
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
         <!-- No Results -->
-        <div class="row" th:if="${vehicles.empty}">
+        <div class="row" id="noResults" style="display: none;">
             <div class="col-12 text-center py-5">
                 <div class="car-card p-5">
                     <i class="fas fa-car fa-4x text-muted mb-3"></i>
-                    <h3 class="text-muted">No vehicles found</h3>
-                    <p class="text-muted">Try adjusting your filters or check back later for new additions.</p>
-                    <a href="/cars" class="btn btn-primary">
-                        <i class="fas fa-refresh me-1"></i>
-                        Clear Filters
-                    </a>
+                    <h3 class="text-muted">No vehicle selected</h3>
+                    <p class="text-muted">Please select a make, year, model, and trim to view detailed vehicle information.</p>
                 </div>
             </div>
         </div>
+
+        <!-- All vehicle selection UI removed as requested -->
     </div>
     
     <!-- Footer -->
     <div th:replace="~{fragments/footer :: footer}"></div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const yearSelect = document.getElementById('year');
+            const makeSelect = document.getElementById('make');
+            const modelSelect = document.getElementById('model');
+            const trimSelect = document.getElementById('trim');
+            const searchBtn = document.getElementById('searchBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const resultsSummary = document.getElementById('resultsSummary');
+            const vehicleDetails = document.getElementById('vehicleDetails');
+            const noResults = document.getElementById('noResults');
+            const apiStatus = document.getElementById('apiStatus');
+            const apiStatusText = document.getElementById('apiStatusText');
+            
+            // Initialize makes when year is selected
+            yearSelect.addEventListener('change', function() {
+                const selectedYear = this.value;
+                makeSelect.innerHTML = '<option value="">Select Make</option>';
+                modelSelect.innerHTML = '<option value="">Select Model</option>';
+                trimSelect.innerHTML = '<option value="">Select Trim</option>';
+                makeSelect.disabled = true;
+                modelSelect.disabled = true;
+                trimSelect.disabled = true;
+                
+                if (selectedYear) {
+                    loadMakes(selectedYear);
+                }
+            });
+            
+            // Initialize models when make is selected
+            makeSelect.addEventListener('change', function() {
+                const selectedYear = yearSelect.value;
+                const selectedMake = this.value;
+                modelSelect.innerHTML = '<option value="">Select Model</option>';
+                trimSelect.innerHTML = '<option value="">Select Trim</option>';
+                modelSelect.disabled = true;
+                trimSelect.disabled = true;
+                
+                if (selectedYear && selectedMake) {
+                    loadModels(selectedYear, selectedMake);
+                }
+            });
+            
+            // Initialize trims when model is selected
+            modelSelect.addEventListener('change', function() {
+                const selectedYear = yearSelect.value;
+                const selectedMake = makeSelect.value;
+                const selectedModel = this.value;
+                trimSelect.innerHTML = '<option value="">Select Trim</option>';
+                trimSelect.disabled = true;
+                
+                if (selectedYear && selectedMake && selectedModel) {
+                    loadTrims(selectedMake, selectedModel, selectedYear);
+                }
+            });
+            
+            // Handle form submission
+            document.getElementById('filterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const selectedYear = yearSelect.value;
+                const selectedMake = makeSelect.value;
+                const selectedModel = modelSelect.value;
+                const selectedTrim = trimSelect.value;
+                
+                if (selectedYear && selectedMake && selectedModel && selectedTrim) {
+                    loadVehicleDetails(selectedMake, selectedModel, selectedTrim, selectedYear);
+                }
+            });
+            
+            // Clear form
+            clearBtn.addEventListener('click', function() {
+                clearForm();
+            });
+            
+            function loadMakes(year) {
+                showLoading();
+                fetch(`/api/vehicles/makes?year=${year}`)
+                    .then(response => response.json())
+                    .then(makes => {
+                        if (makes.length === 0) {
+                            updateApiStatus('error', 'CarQueryAPI is currently unavailable. Please try again later.');
+                            hideLoading();
+                            return;
+                        }
+                        makes.forEach(make => {
+                            const option = document.createElement('option');
+                            option.value = make;
+                            option.textContent = make;
+                            makeSelect.appendChild(option);
+                        });
+                        makeSelect.disabled = false;
+                        hideLoading();
+                        updateApiStatus('success', 'Makes loaded successfully');
+                    })
+                    .catch(error => {
+                        console.error('Error loading makes:', error);
+                        hideLoading();
+                        updateApiStatus('error', 'CarQueryAPI is currently unavailable. Please try again later.');
+                    });
+            }
+            
+            function loadModels(year, make) {
+                showLoading();
+                fetch(`/api/vehicles/models?year=${year}&make=${encodeURIComponent(make)}`)
+                    .then(response => response.json())
+                    .then(models => {
+                        if (models.length === 0) {
+                            updateApiStatus('error', 'CarQueryAPI is currently unavailable. Please try again later.');
+                            hideLoading();
+                            return;
+                        }
+                        models.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model;
+                            option.textContent = model;
+                            modelSelect.appendChild(option);
+                        });
+                        modelSelect.disabled = false;
+                        hideLoading();
+                        updateApiStatus('success', 'Models loaded successfully');
+                    })
+                    .catch(error => {
+                        console.error('Error loading models:', error);
+                        hideLoading();
+                        updateApiStatus('error', 'CarQueryAPI is currently unavailable. Please try again later.');
+                    });
+            }
+            
+            function loadTrims(make, model, year) {
+                showLoading();
+                fetch(`/api/vehicles/trims?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&year=${year}`)
+                    .then(response => response.json())
+                    .then(trims => {
+                        if (trims.length === 0) {
+                            updateApiStatus('error', 'CarQueryAPI is currently unavailable. Please try again later.');
+                            hideLoading();
+                            return;
+                        }
+                        trims.forEach(trim => {
+                            const option = document.createElement('option');
+                            option.value = trim;
+                            option.textContent = trim;
+                            trimSelect.appendChild(option);
+                        });
+                        trimSelect.disabled = false;
+                        hideLoading();
+                        updateApiStatus('success', 'Trims loaded successfully');
+                    })
+                    .catch(error => {
+                        console.error('Error loading trims:', error);
+                        hideLoading();
+                        updateApiStatus('error', 'CarQueryAPI is currently unavailable. Please try again later.');
+                    });
+            }
+            
+            function loadVehicleDetails(make, model, trim, year) {
+                showLoading();
+                fetch(`/api/vehicles/details?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&trim=${encodeURIComponent(trim)}&year=${year}`)
+                    .then(response => response.json())
+                    .then(details => {
+                        if (details.error) {
+                            updateApiStatus('error', details.error);
+                            hideLoading();
+                            return;
+                        }
+                        displayVehicleDetails(details);
+                        hideLoading();
+                        updateApiStatus('success', 'Vehicle details loaded successfully');
+                    })
+                    .catch(error => {
+                        console.error('Error loading vehicle details:', error);
+                        hideLoading();
+                        updateApiStatus('error', 'CarQueryAPI is currently unavailable. Please try again later.');
+                    });
+            }
+            
+            function displayVehicleDetails(details) {
+                // Update basic info
+                document.getElementById('selectedCarName').textContent = `${details.make} ${details.model} ${details.trim}`;
+                document.getElementById('selectedCarYear').textContent = details.year;
+                
+                // Update results text
+                document.getElementById('resultsText').textContent = 
+                    `Showing detailed information for ${details.make} ${details.model} ${details.trim} (${details.year})`;
+                
+                // Update detail fields
+                document.getElementById('detailMake').textContent = details.make || '-';
+                document.getElementById('detailModel').textContent = details.model || '-';
+                document.getElementById('detailTrim').textContent = details.trim || '-';
+                document.getElementById('detailBodyType').textContent = details.body_type || '-';
+                document.getElementById('detailDoors').textContent = details.doors || '-';
+                document.getElementById('detailSeats').textContent = details.seats || '-';
+                
+                // Engine & Performance
+                document.getElementById('detailEngineType').textContent = details.engine_type || '-';
+                document.getElementById('detailEngineSize').textContent = details.engine_cc ? `${details.engine_cc} cc` : '-';
+                document.getElementById('detailCylinders').textContent = details.engine_cylinders || '-';
+                document.getElementById('detailTransmission').textContent = details.transmission_type ? 
+                    `${details.transmission_type} ${details.transmission_gears || ''}`.trim() : '-';
+                document.getElementById('detailAcceleration').textContent = details.zero_to_100_kph ? 
+                    `${details.zero_to_100_kph} seconds` : '-';
+                document.getElementById('detailTopSpeed').textContent = details.top_speed_kph ? 
+                    `${details.top_speed_kph} km/h` : '-';
+                
+                // Fuel & Efficiency
+                document.getElementById('detailFuelCity').textContent = details.fuel_consumption_city || '-';
+                document.getElementById('detailFuelHighway').textContent = details.fuel_consumption_highway || '-';
+                document.getElementById('detailFuelMixed').textContent = details.fuel_consumption_mixed || '-';
+                document.getElementById('detailFuelCapacity').textContent = details.fuel_capacity_l ? 
+                    `${details.fuel_capacity_l} L` : '-';
+                
+                // Dimensions
+                document.getElementById('detailLength').textContent = details.length_mm ? 
+                    `${details.length_mm} mm` : '-';
+                document.getElementById('detailWidth').textContent = details.width_mm ? 
+                    `${details.width_mm} mm` : '-';
+                document.getElementById('detailHeight').textContent = details.height_mm ? 
+                    `${details.height_mm} mm` : '-';
+                document.getElementById('detailWheelbase').textContent = details.wheelbase_mm ? 
+                    `${details.wheelbase_mm} mm` : '-';
+                document.getElementById('detailWeight').textContent = details.weight_kg ? 
+                    `${details.weight_kg} kg` : '-';
+                
+                hideNoResults();
+                showResults();
+            }
+            
+            function clearForm() {
+                yearSelect.value = '';
+                makeSelect.value = '';
+                modelSelect.value = '';
+                trimSelect.value = '';
+                makeSelect.disabled = true;
+                modelSelect.disabled = true;
+                trimSelect.disabled = true;
+                hideResults();
+                noResults.style.display = 'block';
+            }
+            
+            function showLoading() {
+                loadingSpinner.style.display = 'block';
+                hideResults();
+                hideNoResults();
+            }
+            
+            function hideLoading() {
+                loadingSpinner.style.display = 'none';
+            }
+            
+            function showResults() {
+                resultsSummary.style.display = 'block';
+                vehicleDetails.style.display = 'block';
+                noResults.style.display = 'none';
+            }
+            
+            function hideResults() {
+                resultsSummary.style.display = 'none';
+                vehicleDetails.style.display = 'none';
+            }
+            
+            function hideNoResults() {
+                noResults.style.display = 'none';
+            }
+            
+            function updateApiStatus(type, message) {
+                apiStatus.className = `alert alert-${type} alert-dismissible fade show`;
+                apiStatusText.textContent = message;
+                
+                // Auto-hide after 3 seconds
+                setTimeout(() => {
+                    apiStatus.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Initialize with no results
+            hideResults();
+            noResults.style.display = 'block';
+        });
+    </script>
 </body>
 </html> 

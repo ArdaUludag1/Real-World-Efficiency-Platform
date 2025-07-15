@@ -17,6 +17,11 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     @Query("SELECT DISTINCT v.model FROM Vehicle v WHERE v.make = :make AND v.year = :year ORDER BY v.model")
     List<String> findModelsByMakeAndYear(@Param("make") String make, @Param("year") Integer year);
     
+    @Query("SELECT DISTINCT v.trim FROM Vehicle v WHERE v.make = :make AND v.model = :model AND v.year = :year ORDER BY v.trim")
+    List<String> findTrimsByMakeModelYear(@Param("make") String make, @Param("model") String model, @Param("year") Integer year);
+
+    Vehicle findByMakeAndModelAndTrimAndYear(String make, String model, String trim, Integer year);
+    
     Vehicle findByMakeAndModelAndYear(String make, String model, Integer year);
     
     List<Vehicle> findByMake(String make);
