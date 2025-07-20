@@ -145,14 +145,14 @@
                     alertContainer.innerHTML = `
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="fas fa-check-circle me-2"></i>
-                            Login successful! Redirecting to dashboard...
+                            Login successful! Redirecting to home...
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     `;
                     
                     // Redirect to dashboard after a short delay
                     setTimeout(() => {
-                        window.location.href = '/dashboard';
+                        window.location.href = '/home';
                     }, 1500);
                     
                 } else {

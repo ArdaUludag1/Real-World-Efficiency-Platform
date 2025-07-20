@@ -26,16 +26,15 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/vehicles/**").permitAll()
-                .requestMatchers("/login", "/register", "/", "/home", "/index", "/dashboard", "/cars", "/trips", "/benchmark", "/settings").permitAll()
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().permitAll()
+                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .exceptionHandling(eh -> eh
+                .authenticationEntryPoint((request, response, authException) -> response.sendRedirect("/login"))
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable());
-        
         return http.build();
     }
 } 

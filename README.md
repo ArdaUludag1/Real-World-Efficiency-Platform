@@ -1,4 +1,4 @@
-# RouteWeatherDashboard
+# RWE Platform (Real-World Efficiency Platform)
 
 ## Overview
 A Spring Boot application for vehicle route, distance, and weather calculation with user authentication and history tracking.
@@ -9,6 +9,7 @@ A Spring Boot application for vehicle route, distance, and weather calculation w
 - MySQL
 - JWT (HTTP-only cookie)
 - Bootstrap 5, HTML/CSS/JS
+- Thymeleaf
 
 ## Setup Instructions
 
@@ -41,13 +42,17 @@ java -jar target/routedashboard-0.0.1-SNAPSHOT.jar
 ```
 
 ### 5. Access
-Visit [http://localhost:8080](http://localhost:8080). Unauthenticated users are redirected to `/login`.
+Visit [http://localhost:8081](http://localhost:8081).
+- Unauthenticated users are redirected to `/login`.
+- After login, users are redirected to `/home`.
+- Navbar and authenticated UI are only visible when logged in.
+- Logout invalidates the JWT and redirects to `/login`.
 
 ---
 
 ## Folder Structure
 ```
-RouteWeatherDashboard/
+real-efficiency-platform/
 ├── pom.xml
 ├── README.md
 └── src
@@ -62,8 +67,9 @@ RouteWeatherDashboard/
         │       ├── service        # Services for business logic
         │       └── RouteDashboardApplication.java
         └── resources
-            ├── static            # JS/CSS client-side files
-            ├── templates         # HTML files: login.html, register.html, dashboard.html
+            ├── static/assets      # JS/CSS/Images
+            ├── templates         # HTML files: login.html, register.html, home.html, dashboard.html, etc.
+            │   └── fragments     # navbar.html, footer.html
             ├── application.properties
             └── schema.sql
 ```

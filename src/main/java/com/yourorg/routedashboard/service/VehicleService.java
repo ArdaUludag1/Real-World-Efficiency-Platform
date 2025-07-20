@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import com.yourorg.routedashboard.entity.Vehicle;
 
 @Service
 @RequiredArgsConstructor
@@ -121,6 +122,7 @@ public class VehicleService {
                         try {
                             JsonNode jsonNode = objectMapper.readTree(json);
                             JsonNode makesNode = jsonNode.get("Makes");
+                            if (makesNode == null) makesNode = jsonNode.get("makes");
                             
                             List<String> makes = new ArrayList<>();
                             if (makesNode != null && makesNode.isArray()) {
@@ -160,7 +162,6 @@ public class VehicleService {
         headers.set("User-Agent", userAgent);
         headers.set("Accept", "application/json, text/plain, */*");
         headers.set("Accept-Language", "en-US,en;q=0.9");
-        headers.set("Accept-Encoding", "gzip, deflate, br");
         headers.set("Referer", "https://www.carqueryapi.com/");
         headers.set("Origin", "https://www.carqueryapi.com");
         headers.set("Cache-Control", "no-cache");
@@ -325,6 +326,7 @@ public class VehicleService {
                         try {
                             JsonNode jsonNode = objectMapper.readTree(json);
                             JsonNode makesNode = jsonNode.get("Makes");
+                            if (makesNode == null) makesNode = jsonNode.get("makes");
                             List<String> makes = new ArrayList<>();
                             if (makesNode != null && makesNode.isArray()) {
                                 for (JsonNode make : makesNode) {
@@ -475,6 +477,7 @@ public class VehicleService {
                         try {
                             JsonNode jsonNode = objectMapper.readTree(json);
                             JsonNode modelsNode = jsonNode.get("Models");
+                            if (modelsNode == null) modelsNode = jsonNode.get("models");
                             List<String> models = new ArrayList<>();
                             if (modelsNode != null && modelsNode.isArray()) {
                                 for (JsonNode model : modelsNode) {
@@ -587,6 +590,7 @@ public class VehicleService {
                         try {
                             JsonNode jsonNode = objectMapper.readTree(json);
                             JsonNode trimsNode = jsonNode.get("Trims");
+                            if (trimsNode == null) trimsNode = jsonNode.get("trims");
                             List<String> trims = new ArrayList<>();
                             if (trimsNode != null && trimsNode.isArray()) {
                                 for (JsonNode trim : trimsNode) {
@@ -646,20 +650,16 @@ public class VehicleService {
                     ResponseEntity<String> response = restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);
                     if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                         String body = response.getBody();
-                        // Log the raw response for debugging
                         System.out.println("Raw response from " + endpoint + ": " + body.substring(0, Math.min(200, body.length())));
-                        // Check for HTML or error page or unreadable/binary
                         if (body.trim().startsWith("<") || (!body.trim().startsWith("{") && !body.trim().startsWith("[") && !body.trim().matches("[a-zA-Z0-9_\\(\\)\\{\\}\\[\\]\\\"\\':,\\.\\s-]+"))) {
                             System.out.println("CarQueryAPI FAILURE: Received HTML, binary, or unreadable response. Skipping...");
                             continue;
                         }
-                        // Check for access denied error
                         if (body.contains("access has been denied") || body.contains("CarQuery API access has been denied")) {
                             System.out.println("CarQueryAPI FAILURE: API access denied, trying next attempt...");
                             try { Thread.sleep(2000 + random.nextInt(2000)); } catch (InterruptedException ie) { break; }
                             continue;
                         }
-                        // Remove JSONP wrapper if present
                         String json = body;
                         if (json.trim().startsWith("callback(")) {
                             int start = json.indexOf('(') + 1;
@@ -677,23 +677,122 @@ public class VehicleService {
                         try {
                             JsonNode jsonNode = objectMapper.readTree(json);
                             JsonNode trimsNode = jsonNode.get("Trims");
-                            Map<String, Object> vehicleDetails = new HashMap<>();
+                            if (trimsNode == null) trimsNode = jsonNode.get("trims");
                             if (trimsNode != null && trimsNode.isArray()) {
                                 for (JsonNode trimNode : trimsNode) {
-                                    String trimName = trimNode.get("model_trim").asText();
-                                    if (trimName != null && trimName.equals(trim)) {
-                                        vehicleDetails.put("make", make);
-                                        vehicleDetails.put("model", model);
-                                        vehicleDetails.put("trim", trim);
-                                        vehicleDetails.put("year", year);
-                                        if (trimNode.has("model_lkm_city")) vehicleDetails.put("fuel_consumption_city", trimNode.get("model_lkm_city").asText());
-                                        if (trimNode.has("model_lkm_highway")) vehicleDetails.put("fuel_consumption_highway", trimNode.get("model_lkm_highway").asText());
-                                        if (trimNode.has("model_lkm_mixed")) vehicleDetails.put("fuel_consumption_mixed", trimNode.get("model_lkm_mixed").asText());
-                                        vehicleDetails.put("source", "carquery");
-                                        System.out.println("CarQueryAPI SUCCESS: Returning vehicle details from CarQueryAPI");
-                                        return vehicleDetails;
+                                    // Match by make, model, trim, year (case-insensitive, fallback to partial match if needed)
+                                    boolean match = true;
+                                    if (trimNode.has("model_trim") && trim != null && !trim.isEmpty()) {
+                                        String apiTrim = trimNode.get("model_trim").asText("");
+                                        match &= apiTrim.equalsIgnoreCase(trim);
+                                    }
+                                    if (trimNode.has("model_name") && model != null && !model.isEmpty()) {
+                                        String apiModel = trimNode.get("model_name").asText("");
+                                        match &= apiModel.equalsIgnoreCase(model);
+                                    }
+                                    if (trimNode.has("make_display") && make != null && !make.isEmpty()) {
+                                        String apiMake = trimNode.get("make_display").asText("");
+                                        match &= apiMake.equalsIgnoreCase(make);
+                                    }
+                                    if (trimNode.has("model_year")) {
+                                        int apiYear = trimNode.get("model_year").asInt(-1);
+                                        match &= (apiYear == year);
+                                    }
+                                    if (match) {
+                                        System.out.println("Matched trimNode: " + trimNode.toPrettyString());
+                                        // Build or update Vehicle entity from API data
+                                        Vehicle vehicle = vehicleRepository.findByMakeAndModelAndTrimAndYear(make, model, trim, year);
+                                        if (vehicle == null) {
+                                            vehicle = new com.yourorg.routedashboard.entity.Vehicle();
+                                            vehicle.setMake(make);
+                                            vehicle.setModel(model);
+                                            vehicle.setTrim(trim);
+                                            vehicle.setYear(year);
+                                        }
+                                        vehicle.setModelId(trimNode.path("model_id").asText(null));
+                                        vehicle.setModelEnginePosition(trimNode.path("model_engine_position").asText(null));
+                                        vehicle.setModelEngineCc(parseIntSafe(trimNode, "model_engine_cc"));
+                                        vehicle.setModelEngineCyl(parseIntSafe(trimNode, "model_engine_cyl"));
+                                        vehicle.setModelEngineType(trimNode.path("model_engine_type").asText(null));
+                                        vehicle.setModelEngineValvesPerCyl(parseIntSafe(trimNode, "model_engine_valves_per_cyl"));
+                                        vehicle.setModelEnginePowerPs(parseIntSafe(trimNode, "model_engine_power_ps"));
+                                        vehicle.setModelEnginePowerRpm(parseIntSafe(trimNode, "model_engine_power_rpm"));
+                                        vehicle.setModelEngineTorqueNm(parseIntSafe(trimNode, "model_engine_torque_nm"));
+                                        vehicle.setModelEngineTorqueRpm(parseIntSafe(trimNode, "model_engine_torque_rpm"));
+                                        vehicle.setModelEngineBoreMm(parseDoubleSafe(trimNode, "model_engine_bore_mm"));
+                                        vehicle.setModelEngineStrokeMm(parseDoubleSafe(trimNode, "model_engine_stroke_mm"));
+                                        vehicle.setModelEngineCompression(trimNode.path("model_engine_compression").asText(null));
+                                        vehicle.setModelEngineFuel(trimNode.path("model_engine_fuel").asText(null));
+                                        vehicle.setModelTopSpeedKph(parseIntSafe(trimNode, "model_top_speed_kph"));
+                                        vehicle.setModel0To100Kph(parseDoubleSafe(trimNode, "model_0_to_100_kph"));
+                                        vehicle.setModelDrive(trimNode.path("model_drive").asText(null));
+                                        vehicle.setModelTransmissionType(trimNode.path("model_transmission_type").asText(null));
+                                        vehicle.setModelSeats(parseIntSafe(trimNode, "model_seats"));
+                                        vehicle.setModelDoors(parseIntSafe(trimNode, "model_doors"));
+                                        vehicle.setModelWeightKg(parseIntSafe(trimNode, "model_weight_kg"));
+                                        vehicle.setModelLengthMm(parseIntSafe(trimNode, "model_length_mm"));
+                                        vehicle.setModelWidthMm(parseIntSafe(trimNode, "model_width_mm"));
+                                        vehicle.setModelHeightMm(parseIntSafe(trimNode, "model_height_mm"));
+                                        vehicle.setModelWheelbaseMm(parseIntSafe(trimNode, "model_wheelbase_mm"));
+                                        vehicle.setModelLkmHwy(parseDoubleSafe(trimNode, "model_lkm_hwy"));
+                                        vehicle.setModelLkmMixed(parseDoubleSafe(trimNode, "model_lkm_mixed"));
+                                        vehicle.setModelLkmCity(parseDoubleSafe(trimNode, "model_lkm_city"));
+                                        vehicle.setModelFuelCapL(parseDoubleSafe(trimNode, "model_fuel_cap_l"));
+                                        vehicle.setModelSoldInUs(parseBooleanSafe(trimNode, "model_sold_in_us"));
+                                        vehicle.setModelCo2(parseDoubleSafe(trimNode, "model_co2"));
+                                        vehicle.setModelMakeDisplay(trimNode.path("model_make_display").asText(null));
+                                        vehicle.setMakeDisplay(trimNode.path("make_display").asText(null));
+                                        vehicle.setMakeCountry(trimNode.path("make_country").asText(null));
+                                        vehicle.setLastUpdated(java.time.LocalDateTime.now());
+                                        vehicleRepository.save(vehicle);
+                                        Map<String, Object> details = new HashMap<>();
+                                        details.put("make", trimNode.path("make_display").asText(""));
+                                        details.put("model", trimNode.path("model_name").asText(""));
+                                        details.put("trim", trimNode.path("model_trim").asText(""));
+                                        details.put("year", trimNode.path("model_year").asText(""));
+                                        details.put("body_type", trimNode.path("model_body").asText("-"));
+                                        details.put("doors", trimNode.path("model_doors").asText("-"));
+                                        details.put("seats", trimNode.path("model_seats").asText("-"));
+                                        details.put("engine_type", trimNode.path("model_engine_type").asText("-"));
+                                        details.put("engine_size", trimNode.path("model_engine_cc").asText("-"));
+                                        details.put("cylinders", trimNode.path("model_engine_cyl").asText("-"));
+                                        details.put("transmission", trimNode.path("model_transmission_type").asText("-"));
+                                        details.put("acceleration", trimNode.path("model_0_to_100_kph").asText("-"));
+                                        details.put("top_speed", trimNode.path("model_top_speed_kph").asText("-"));
+                                        details.put("city_l_per_100km", trimNode.path("model_lkm_city").asText("-"));
+                                        details.put("highway_l_per_100km", trimNode.path("model_lkm_highway").asText("-"));
+                                        details.put("mixed_l_per_100km", trimNode.path("model_lkm_mixed").asText("-"));
+                                        details.put("fuel_capacity", trimNode.path("model_fuel_cap_l").asText("-"));
+                                        details.put("length", trimNode.path("model_length_mm").asText("-"));
+                                        details.put("width", trimNode.path("model_width_mm").asText("-"));
+                                        details.put("height", trimNode.path("model_height_mm").asText("-"));
+                                        details.put("wheelbase", trimNode.path("model_wheelbase_mm").asText("-"));
+                                        details.put("weight", trimNode.path("model_weight_kg").asText("-"));
+                                        details.put("source", "carquery");
+
+                                        // Merge with DB data for missing fields
+                                        var vehicleDB = vehicleRepository.findByMakeAndModelAndTrimAndYear(make, model, trim, year);
+                                        if (vehicleDB != null) {
+                                            // Only update if API value is missing or '-'
+                                            if (details.get("city_l_per_100km").equals("-") && vehicleDB.getFuelConsumptionCity() != null) {
+                                                details.put("city_l_per_100km", vehicleDB.getFuelConsumptionCity().toString());
+                                            }
+                                            if (details.get("highway_l_per_100km").equals("-") && vehicleDB.getFuelConsumptionHighway() != null) {
+                                                details.put("highway_l_per_100km", vehicleDB.getFuelConsumptionHighway().toString());
+                                            }
+                                            if (details.get("mixed_l_per_100km").equals("-") && vehicleDB.getFuelConsumptionMixed() != null) {
+                                                details.put("mixed_l_per_100km", vehicleDB.getFuelConsumptionMixed().toString());
+                                            }
+                                            // Add more fields here if you extend your Vehicle entity
+                                        }
+                                        System.out.println("CarQueryAPI SUCCESS: Returning vehicle details from CarQueryAPI (merged): " + details);
+                                        return details;
                                     }
                                 }
+                                // If no match, log all trims for debugging
+                                System.err.println("No exact trim match found. Available trims: " + trimsNode.toString());
+                            } else {
+                                System.err.println("No 'Trims' or 'trims' array found in response: " + jsonNode.toString());
                             }
                         } catch (Exception e) {
                             System.err.println("CarQueryAPI FAILURE: Error parsing JSON from " + endpoint + ": " + e.getMessage());
@@ -723,6 +822,29 @@ public class VehicleService {
             details.put("source", "database");
         }
         return details;
+    }
+
+    // Utility methods for safe parsing
+    private Integer parseIntSafe(JsonNode node, String field) {
+        String value = node.path(field).asText(null);
+        try {
+            return value != null && !value.isEmpty() ? Integer.valueOf(value) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    private Double parseDoubleSafe(JsonNode node, String field) {
+        String value = node.path(field).asText(null);
+        try {
+            return value != null && !value.isEmpty() ? Double.valueOf(value) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    private Boolean parseBooleanSafe(JsonNode node, String field) {
+        String value = node.path(field).asText(null);
+        if (value == null) return null;
+        return value.equals("1") || value.equalsIgnoreCase("true");
     }
 
     // New methods for the extended features

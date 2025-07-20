@@ -59,11 +59,21 @@ public class AuthController {
     
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
+        System.out.println("Logout endpoint called");
+        
+        // Create a cookie that expires immediately to clear the JWT
         ResponseCookie cookie = ResponseCookie.from("jwt", "")
                 .httpOnly(true)
                 .path("/")
                 .maxAge(0)
+                .secure(false) // Set to true in production with HTTPS
+                .sameSite("Lax")
                 .build();
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).build();
+        
+        System.out.println("JWT cookie cleared");
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 } 

@@ -66,20 +66,4 @@
         </div>
     </nav>
     
-    <script>
-        function logout(event) {
-            if (event) event.preventDefault();
-            const logoutBtn = event?.target;
-            if (logoutBtn) logoutBtn.disabled = true;
-            fetch('/api/auth/logout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include' // ensure cookies are sent
-            }).finally(() => {
-                // Always redirect to login, even if fetch fails
-                window.location.href = '/login';
-            });
-        }
-    </script> 
+    <script src="/js/common.js"></script> 

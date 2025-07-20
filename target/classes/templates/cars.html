@@ -121,6 +121,53 @@
     
     <!-- Main Content -->
     <div class="container mt-4">
+        <!-- All Vehicles List -->
+        <div th:if="${vehicles != null}" class="mb-5">
+            <h2 class="fw-bold mb-4">All Vehicles in Database</h2>
+            <div th:each="vehicle : ${vehicles}" class="mb-4 p-4 car-card">
+                <h4 th:text="${vehicle.make} + ' ' + ${vehicle.model} + ' ' + (${vehicle.trim} ?: '') + ' (' + ${vehicle.year} + ')'" class="mb-3"></h4>
+                <span class="badge bg-success mb-3">Available</span>
+                <div class="specs-grid">
+                    <!-- Basic Information -->
+                    <div class="specs-card">
+                        <div class="specs-title">Basic Information</div>
+                        <div class="detail-item"><span class="detail-label">Make:</span> <span class="detail-value" th:text="${vehicle.make} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Model:</span> <span class="detail-value" th:text="${vehicle.model} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Trim:</span> <span class="detail-value" th:text="${vehicle.trim} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Body Type:</span> <span class="detail-value" th:text="${vehicle.modelBody} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Doors:</span> <span class="detail-value" th:text="${vehicle.modelDoors} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Seats:</span> <span class="detail-value" th:text="${vehicle.modelSeats} ?: '-'"/></div>
+                    </div>
+                    <!-- Engine & Performance -->
+                    <div class="specs-card">
+                        <div class="specs-title">Engine & Performance</div>
+                        <div class="detail-item"><span class="detail-label">Engine Type:</span> <span class="detail-value" th:text="${vehicle.modelEngineType} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Engine Size:</span> <span class="detail-value" th:text="${vehicle.modelEngineCc} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Cylinders:</span> <span class="detail-value" th:text="${vehicle.modelEngineCyl} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Transmission:</span> <span class="detail-value" th:text="${vehicle.modelTransmissionType} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">0-100 km/h:</span> <span class="detail-value" th:text="${vehicle.model0To100Kph} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Top Speed:</span> <span class="detail-value" th:text="${vehicle.modelTopSpeedKph} ?: '-'"/></div>
+                    </div>
+                    <!-- Fuel & Efficiency -->
+                    <div class="specs-card">
+                        <div class="specs-title">Fuel & Efficiency</div>
+                        <div class="detail-item"><span class="detail-label">City (L/100km):</span> <span class="detail-value" th:text="${vehicle.modelLkmCity} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Highway (L/100km):</span> <span class="detail-value" th:text="${vehicle.modelLkmHwy} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Mixed (L/100km):</span> <span class="detail-value" th:text="${vehicle.modelLkmMixed} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Fuel Capacity:</span> <span class="detail-value" th:text="${vehicle.modelFuelCapL} ?: '-'"/></div>
+                    </div>
+                    <!-- Dimensions -->
+                    <div class="specs-card">
+                        <div class="specs-title">Dimensions</div>
+                        <div class="detail-item"><span class="detail-label">Length:</span> <span class="detail-value" th:text="${vehicle.modelLengthMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Width:</span> <span class="detail-value" th:text="${vehicle.modelWidthMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Height:</span> <span class="detail-value" th:text="${vehicle.modelHeightMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Wheelbase:</span> <span class="detail-value" th:text="${vehicle.modelWheelbaseMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Weight:</span> <span class="detail-value" th:text="${vehicle.modelWeightKg} ?: '-'"/></div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Page Header -->
         <div class="row mb-4">
             <div class="col-12">
@@ -649,5 +696,6 @@
             noResults.style.display = 'block';
         });
     </script>
+    <script src="/js/common.js"></script>
 </body>
 </html> 

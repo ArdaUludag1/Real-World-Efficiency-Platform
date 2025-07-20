@@ -5,6 +5,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import com.yourorg.routedashboard.service.VehicleService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 
 @Controller
 public class WebController {
@@ -12,8 +15,12 @@ public class WebController {
     private VehicleService vehicleService;
 
     @GetMapping("/")
-    public String home() {
-        return "home";
+    public String rootRedirect() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+        return "redirect:/home";
     }
 
     @GetMapping("/home")
