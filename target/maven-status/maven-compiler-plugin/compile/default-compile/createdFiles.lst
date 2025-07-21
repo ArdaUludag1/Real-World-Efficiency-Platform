@@ -4,6 +4,7 @@ com\yourorg\routedashboard\repository\TripRepository.class
 com\yourorg\routedashboard\entity\User$UserBuilder.class
 com\yourorg\routedashboard\controller\DashboardController.class
 com\yourorg\routedashboard\controller\AuthController.class
+com\yourorg\routedashboard\service\LocationWeatherService.class
 com\yourorg\routedashboard\entity\User.class
 com\yourorg\routedashboard\service\BenchmarkService.class
 com\yourorg\routedashboard\entity\History$HistoryBuilder.class
@@ -37,6 +38,7 @@ com\yourorg\routedashboard\dto\SettingsRequest.class
 com\yourorg\routedashboard\entity\History.class
 com\yourorg\routedashboard\entity\Trip.class
 com\yourorg\routedashboard\service\HistoryService.class
+com\yourorg\routedashboard\controller\TripApiController.class
 com\yourorg\routedashboard\service\WeatherService.class
 com\yourorg\routedashboard\dto\LoginRequest.class
 com\yourorg\routedashboard\dto\TripRequest.class

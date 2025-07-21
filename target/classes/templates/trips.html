@@ -82,21 +82,7 @@
                             <div class="col-12">
                                 <h6 class="text-primary mb-3"><i class="fas fa-car me-2"></i>Vehicle Information</h6>
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="make" class="form-label fw-bold">Make</label>
-                                <select class="form-select" id="make" name="make" required>
-                                    <option value="">Select Make</option>
-                                    <option th:each="make : ${makes}" 
-                                            th:value="${make}" 
-                                            th:text="${make}">
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="model" class="form-label fw-bold">Model</label>
-                                <input type="text" class="form-control" id="model" name="model" placeholder="Enter model" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="year" class="form-label fw-bold">Year</label>
                                 <select class="form-select" id="year" name="year" required>
                                     <option value="">Select Year</option>
@@ -104,6 +90,24 @@
                                             th:value="${year}" 
                                             th:text="${year}">
                                     </option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="make" class="form-label fw-bold">Make</label>
+                                <select class="form-select" id="make" name="make" required disabled>
+                                    <option value="">Select Make</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="model" class="form-label fw-bold">Model</label>
+                                <select class="form-select" id="model" name="model" required disabled>
+                                    <option value="">Select Model</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="trim" class="form-label fw-bold">Trim</label>
+                                <select class="form-select" id="trim" name="trim" required disabled>
+                                    <option value="">Select Trim</option>
                                 </select>
                             </div>
                         </div>
@@ -115,13 +119,35 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="fromCity" class="form-label fw-bold">From</label>
-                                <input type="text" class="form-control" id="fromCity" name="fromCity" placeholder="Enter departure city" required>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="fromCity" name="fromCity" placeholder="Enter departure city" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="getWeatherData('from')">
+                                        <i class="fas fa-cloud"></i> Weather
+                                    </button>
+                                </div>
+                                <div id="fromWeatherInfo" class="mt-2" style="display: none;"></div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="toCity" class="form-label fw-bold">To</label>
-                                <input type="text" class="form-control" id="toCity" name="toCity" placeholder="Enter destination city" required>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="toCity" name="toCity" placeholder="Enter destination city" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="getWeatherData('to')">
+                                        <i class="fas fa-cloud"></i> Weather
+                                    </button>
+                                </div>
+                                <div id="toWeatherInfo" class="mt-2" style="display: none;"></div>
                             </div>
                         </div>
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <button class="btn btn-primary" type="button" onclick="calculateDistance()">
+                                    <i class="fas fa-route"></i> Calculate Distance & Route
+                                </button>
+                            </div>
+                        </div>
+                        <div id="distanceInfo" class="mb-4" style="display: none;"></div>
+                        
+
                         
                         <!-- Trip Details -->
                         <div class="row mb-4">
@@ -130,7 +156,8 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="distance" class="form-label fw-bold">Distance (km)</label>
-                                <input type="number" step="0.1" class="form-control" id="distance" name="distance" placeholder="Enter distance" required>
+                                <input type="number" step="0.1" class="form-control" id="distance" name="distance" placeholder="Calculated automatically" readonly>
+                                <small class="text-muted">Distance will be calculated when you click "Calculate Distance & Route"</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="fuelConsumption" class="form-label fw-bold">Fuel Consumption (L/100km)</label>
@@ -162,5 +189,372 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/common.js"></script>
+    <script>
+        // Global functions for weather and distance
+        function getWeatherData(type) {
+            const locationInput = document.getElementById(type === 'from' ? 'fromCity' : 'toCity');
+            const location = locationInput.value.trim();
+            
+            if (!location) {
+                alert('Please enter a location first.');
+                return;
+            }
+            
+            console.log('Fetching weather data for ' + type + ' location:', location);
+            
+            fetch(`/api/weather?location=${encodeURIComponent(location)}`)
+                .then(response => {
+                    console.log('Weather API response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Weather API response data:', data);
+                    
+                    if (data.error) {
+                        alert('Error fetching weather data: ' + data.error);
+                        return;
+                    }
+                    
+                    displayWeatherInfo(type, data);
+                })
+                .catch(error => {
+                    console.error('Error fetching weather data:', error);
+                    alert('Error fetching weather data. Please try again.');
+                });
+        }
+        
+        function displayWeatherInfo(type, data) {
+            const weatherDiv = document.getElementById(type + 'WeatherInfo');
+            
+            let html = `
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">${data.formatted_address || 'Location'}</h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <p class="mb-1"><strong>Temperature:</strong> ${data.temperature}°C</p>
+                                <p class="mb-1"><strong>Feels like:</strong> ${data.feels_like}°C</p>
+                                <p class="mb-1"><strong>Humidity:</strong> ${data.humidity}%</p>
+                            </div>
+                            <div class="col-6">
+                                <p class="mb-1"><strong>Weather:</strong> ${data.description}</p>
+                                <p class="mb-1"><strong>Wind:</strong> ${data.wind_speed} m/s</p>
+                                <p class="mb-1"><strong>Pressure:</strong> ${data.pressure} hPa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            weatherDiv.innerHTML = html;
+            weatherDiv.style.display = 'block';
+        }
+        
+        function calculateDistance() {
+            const originLocation = document.getElementById('fromCity').value.trim();
+            const destinationLocation = document.getElementById('toCity').value.trim();
+            
+            if (!originLocation || !destinationLocation) {
+                alert('Please enter both origin and destination locations.');
+                return;
+            }
+            
+            console.log('Calculating distance from', originLocation, 'to', destinationLocation);
+            
+            fetch(`/api/distance?origin=${encodeURIComponent(originLocation)}&destination=${encodeURIComponent(destinationLocation)}`)
+                .then(response => {
+                    console.log('Distance API response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Distance API response data:', data);
+                    
+                    if (data.error) {
+                        alert('Error calculating distance: ' + data.error);
+                        return;
+                    }
+                    
+                    displayDistanceInfo(data);
+                })
+                .catch(error => {
+                    console.error('Error calculating distance:', error);
+                    alert('Error calculating distance. Please try again.');
+                });
+        }
+        
+        function displayDistanceInfo(data) {
+            const distanceDiv = document.getElementById('distanceInfo');
+            const distanceInput = document.getElementById('distance');
+            
+            // Auto-populate the distance field
+            distanceInput.value = data.distance_km;
+            
+            let html = `
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">Route Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>From:</strong> ${data.origin}</p>
+                                <p class="mb-1"><strong>To:</strong> ${data.destination}</p>
+                                <p class="mb-1"><strong>Route Type:</strong> ${data.route_type}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>Distance:</strong> ${data.distance_km} km (${data.distance_miles} miles)</p>
+                                <p class="mb-1"><strong>Duration:</strong> ${data.duration_hours} hours (${data.duration_minutes} minutes)</p>
+                                ${data.note ? `<p class="mb-1 text-muted"><small>${data.note}</small></p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            distanceDiv.innerHTML = html;
+            distanceDiv.style.display = 'block';
+            
+            // Show success message
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success alert-dismissible fade show mt-3';
+            successAlert.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                Distance calculated and auto-filled! Now enter your fuel consumption.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            distanceDiv.appendChild(successAlert);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const yearSelect = document.getElementById('year');
+            const makeSelect = document.getElementById('make');
+            const modelSelect = document.getElementById('model');
+            const trimSelect = document.getElementById('trim');
+            const fromCityInput = document.getElementById('fromCity');
+            const toCityInput = document.getElementById('toCity');
+            
+            // Initialize makes when year is selected
+            yearSelect.addEventListener('change', function() {
+                const selectedYear = this.value;
+                makeSelect.innerHTML = '<option value="">Select Make</option>';
+                modelSelect.innerHTML = '<option value="">Select Model</option>';
+                trimSelect.innerHTML = '<option value="">Select Trim</option>';
+                makeSelect.disabled = true;
+                modelSelect.disabled = true;
+                trimSelect.disabled = true;
+                
+                if (selectedYear) {
+                    loadMakes(selectedYear);
+                }
+            });
+            
+            // Initialize models when make is selected
+            makeSelect.addEventListener('change', function() {
+                const selectedYear = yearSelect.value;
+                const selectedMake = this.value;
+                modelSelect.innerHTML = '<option value="">Select Model</option>';
+                trimSelect.innerHTML = '<option value="">Select Trim</option>';
+                modelSelect.disabled = true;
+                trimSelect.disabled = true;
+                
+                if (selectedYear && selectedMake) {
+                    loadModels(selectedYear, selectedMake);
+                }
+            });
+            
+            // Initialize trims when model is selected
+            modelSelect.addEventListener('change', function() {
+                const selectedYear = yearSelect.value;
+                const selectedMake = makeSelect.value;
+                const selectedModel = this.value;
+                trimSelect.innerHTML = '<option value="">Select Trim</option>';
+                trimSelect.disabled = true;
+                
+                if (selectedYear && selectedMake && selectedModel) {
+                    loadTrims(selectedMake, selectedModel, selectedYear);
+                }
+            });
+            
+            function loadMakes(year) {
+                fetch(`/api/vehicles/makes?year=${year}`)
+                    .then(response => response.json())
+                    .then(makes => {
+                        if (makes.length === 0) {
+                            console.error('No makes available for year:', year);
+                            return;
+                        }
+                        makes.forEach(make => {
+                            const option = document.createElement('option');
+                            option.value = make;
+                            option.textContent = make;
+                            makeSelect.appendChild(option);
+                        });
+                        makeSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error loading makes:', error);
+                    });
+            }
+            
+            function loadModels(year, make) {
+                fetch(`/api/vehicles/models?year=${year}&make=${encodeURIComponent(make)}`)
+                    .then(response => response.json())
+                    .then(models => {
+                        if (models.length === 0) {
+                            console.error('No models available for make:', make);
+                            return;
+                        }
+                        models.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model;
+                            option.textContent = model;
+                            modelSelect.appendChild(option);
+                        });
+                        modelSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error loading models:', error);
+                    });
+            }
+            
+            function loadTrims(make, model, year) {
+                fetch(`/api/vehicles/trims?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&year=${year}`)
+                    .then(response => response.json())
+                    .then(trims => {
+                        if (trims.length === 0) {
+                            console.error('No trims available for model:', model);
+                            return;
+                        }
+                        trims.forEach(trim => {
+                            const option = document.createElement('option');
+                            option.value = trim;
+                            option.textContent = trim;
+                            trimSelect.appendChild(option);
+                        });
+                        trimSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error loading trims:', error);
+                    });
+            }
+
+            // Weather and Distance Functions
+            function getWeatherData(type) {
+                const locationInput = document.getElementById(type === 'from' ? 'fromCity' : 'toCity');
+                const location = locationInput.value.trim();
+                
+                if (!location) {
+                    alert('Please enter a location first.');
+                    return;
+                }
+                
+                console.log('Fetching weather data for ' + type + ' location:', location);
+                
+                fetch(`/api/weather?location=${encodeURIComponent(location)}`)
+                    .then(response => {
+                        console.log('Weather API response status:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Weather API response data:', data);
+                        
+                        if (data.error) {
+                            alert('Error fetching weather data: ' + data.error);
+                            return;
+                        }
+                        
+                        displayWeatherInfo(type, data);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching weather data:', error);
+                        alert('Error fetching weather data. Please try again.');
+                    });
+            }
+            
+            function displayWeatherInfo(type, data) {
+                const weatherDiv = document.getElementById(type + 'WeatherInfo');
+                
+                let html = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">${data.formatted_address || 'Location'}</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>Temperature:</strong> ${data.temperature}°C</p>
+                                    <p class="mb-1"><strong>Feels like:</strong> ${data.feels_like}°C</p>
+                                    <p class="mb-1"><strong>Humidity:</strong> ${data.humidity}%</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1"><strong>Weather:</strong> ${data.description}</p>
+                                    <p class="mb-1"><strong>Wind:</strong> ${data.wind_speed} m/s</p>
+                                    <p class="mb-1"><strong>Pressure:</strong> ${data.pressure} hPa</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                weatherDiv.innerHTML = html;
+                weatherDiv.style.display = 'block';
+            }
+            
+            function calculateDistance() {
+                const originLocation = document.getElementById('fromCity').value.trim();
+                const destinationLocation = document.getElementById('toCity').value.trim();
+                
+                if (!originLocation || !destinationLocation) {
+                    alert('Please enter both origin and destination locations.');
+                    return;
+                }
+                
+                console.log('Calculating distance from', originLocation, 'to', destinationLocation);
+                
+                fetch(`/api/distance?origin=${encodeURIComponent(originLocation)}&destination=${encodeURIComponent(destinationLocation)}`)
+                    .then(response => {
+                        console.log('Distance API response status:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Distance API response data:', data);
+                        
+                        if (data.error) {
+                            alert('Error calculating distance: ' + data.error);
+                            return;
+                        }
+                        
+                        displayDistanceInfo(data);
+                    })
+                    .catch(error => {
+                        console.error('Error calculating distance:', error);
+                        alert('Error calculating distance. Please try again.');
+                    });
+            }
+            
+            function displayDistanceInfo(data) {
+                const distanceDiv = document.getElementById('distanceInfo');
+                
+                let html = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Route Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>From:</strong> ${data.origin}</p>
+                                    <p class="mb-1"><strong>To:</strong> ${data.destination}</p>
+                                    <p class="mb-1"><strong>Route Type:</strong> ${data.route_type}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Distance:</strong> ${data.distance_km} km (${data.distance_miles} miles)</p>
+                                    <p class="mb-1"><strong>Duration:</strong> ${data.duration_hours} hours (${data.duration_minutes} minutes)</p>
+                                    ${data.note ? `<p class="mb-1 text-muted"><small>${data.note}</small></p>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                distanceDiv.innerHTML = html;
+                distanceDiv.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html> 

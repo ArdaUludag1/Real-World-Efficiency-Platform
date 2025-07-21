@@ -38,6 +38,22 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
+        .comparison-result {
+            border-left: 4px solid #28a745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+        .comparison-result.warning {
+            border-left-color: #ffc107;
+            background: rgba(255, 193, 7, 0.1);
+        }
+        .comparison-result.danger {
+            border-left-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+        .comparison-result.info {
+            border-left-color: #17a2b8;
+            background: rgba(23, 162, 184, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -53,47 +69,75 @@
                     <i class="fas fa-chart-line me-3"></i>
                     Efficiency Benchmark
                 </h1>
-                <p class="lead text-muted">Compare your efficiency with industry standards</p>
+                <p class="lead text-muted">Compare your real-world efficiency with factory specifications</p>
             </div>
         </div>
         
-        <!-- Efficiency Overview -->
+        <!-- User Statistics Overview -->
         <div class="row mb-4">
-            <div class="col-md-6 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="benchmark-card p-4 text-center">
-                    <i class="fas fa-user fa-3x text-primary mb-3"></i>
-                    <h3 class="card-title" th:text="${userEfficiency + ' L/100km'}">7.2 L/100km</h3>
-                    <p class="card-text text-muted">Your Average Efficiency</p>
-                    <div class="progress mt-3">
-                        <div class="progress-bar bg-success" style="width: 85%"></div>
-                    </div>
+                    <i class="fas fa-route fa-3x text-primary mb-3"></i>
+                    <h3 class="card-title" th:text="${totalTrips}">0</h3>
+                    <p class="card-text text-muted">Total Trips</p>
                 </div>
             </div>
-            <div class="col-md-6 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="benchmark-card p-4 text-center">
-                    <i class="fas fa-users fa-3x text-info mb-3"></i>
-                    <h3 class="card-title" th:text="${averageEfficiency + ' L/100km'}">8.5 L/100km</h3>
-                    <p class="card-text text-muted">Industry Average</p>
-                    <div class="progress mt-3">
-                        <div class="progress-bar bg-info" style="width: 70%"></div>
-                    </div>
+                    <i class="fas fa-road fa-3x text-success mb-3"></i>
+                    <h3 class="card-title" th:text="${totalDistance + ' km'}">0 km</h3>
+                    <p class="card-text text-muted">Total Distance</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="benchmark-card p-4 text-center">
+                    <i class="fas fa-leaf fa-3x text-info mb-3"></i>
+                    <h3 class="card-title" th:text="${userAverageEfficiency + ' L/100km'}">0 L/100km</h3>
+                    <p class="card-text text-muted">Your Average</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="benchmark-card p-4 text-center">
+                    <i class="fas fa-car fa-3x text-warning mb-3"></i>
+                    <h3 class="card-title" th:text="${uniqueVehicles.size()}">0</h3>
+                    <p class="card-text text-muted">Vehicles Used</p>
                 </div>
             </div>
         </div>
         
-        <!-- Category Comparison -->
+        <!-- Trip Selection for Comparison -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="benchmark-card">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>Category Comparison</h5>
+                        <h5 class="mb-0"><i class="fas fa-search me-2"></i>Select Trip for Comparison</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 mb-3" th:each="category : ${categories}">
-                                <div class="d-flex justify-content-between align-items-center p-3 border rounded">
-                                    <span class="fw-bold" th:text="${category}">Category</span>
-                                    <span class="badge bg-primary">8.2 L/100km</span>
+                        <div th:if="${userTrips.empty}" class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5>No trips available for comparison</h5>
+                            <p class="text-muted">Create some trips first to compare with factory data.</p>
+                            <a href="/trips" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Create Trip
+                            </a>
+                        </div>
+                        
+                        <div th:if="${!userTrips.empty}">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="tripSelect" class="form-label fw-bold">Choose a trip to compare:</label>
+                                    <select class="form-select" id="tripSelect" onchange="loadTripComparison()">
+                                        <option value="">Select a trip...</option>
+                                        <option th:each="trip : ${userTrips}" 
+                                                th:value="${trip.id}"
+                                                th:text="${trip.year + ' ' + trip.make + ' ' + trip.model + ' - ' + trip.fromCity + ' to ' + trip.toCity + ' (' + trip.fuelConsumptionActual + ' L/100km)'}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-primary w-100 mt-4" onclick="loadTripComparison()" id="compareBtn" disabled>
+                                        <i class="fas fa-chart-bar me-2"></i>Compare with Factory Data
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -102,71 +146,75 @@
             </div>
         </div>
         
-        <!-- Benchmark Chart -->
-        <div class="row mb-4">
+        <!-- Comparison Results -->
+        <div class="row mb-4" id="comparisonResults" style="display: none;">
             <div class="col-12">
                 <div class="benchmark-card">
                     <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Efficiency Comparison</h5>
+                        <h5 class="mb-0"><i class="fas fa-balance-scale me-2"></i>Efficiency Comparison Results</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row align-items-center mb-3">
-                            <div class="col-md-3">
-                                <span class="fw-bold">Your Efficiency:</span>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="efficiency-bar" style="width: 75%; background: #28a745;"></div>
-                                <small class="text-muted">7.2 L/100km</small>
-                            </div>
-                        </div>
-                        <div class="row align-items-center mb-3">
-                            <div class="col-md-3">
-                                <span class="fw-bold">Industry Average:</span>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="efficiency-bar" style="width: 85%; background: #ffc107;"></div>
-                                <small class="text-muted">8.5 L/100km</small>
-                            </div>
-                        </div>
-                        <div class="row align-items-center">
-                            <div class="col-md-3">
-                                <span class="fw-bold">Best Practice:</span>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="efficiency-bar" style="width: 60%; background: #28a745;"></div>
-                                <small class="text-muted">6.0 L/100km</small>
-                            </div>
+                        <div id="comparisonContent">
+                            <!-- Comparison content will be loaded here -->
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Recommendations -->
-        <div class="row">
-            <div class="col-12">
+        <!-- Detailed Analysis -->
+        <div class="d-flex flex-row gap-3 mb-4" id="detailedAnalysis" style="display: none;">
+            <div class="flex-fill">
+                <div class="benchmark-card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-car me-2"></i>Vehicle Information</h6>
+                    </div>
+                    <div class="card-body p-3" id="vehicleInfo">
+                        <!-- Vehicle info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            <div class="flex-fill">
                 <div class="benchmark-card">
                     <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recommendations</h5>
+                        <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Recommendations</h6>
+                    </div>
+                    <div class="card-body p-3" id="recommendations">
+                        <!-- Recommendations will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            <div class="flex-fill">
+                <div class="benchmark-card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Quick Stats</h6>
+                    </div>
+                    <div class="card-body p-3" id="quickStats">
+                        <!-- Quick stats will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Historical Comparison -->
+        <div class="row" id="historicalComparison" style="display: none;">
+            <div class="col-12">
+                <div class="benchmark-card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historical Performance</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex">
-                                    <i class="fas fa-check-circle text-success fa-2x me-3"></i>
-                                    <div>
-                                        <h6>Good Job!</h6>
-                                        <p class="text-muted mb-0">Your efficiency is better than the industry average.</p>
-                                    </div>
+                            <div class="col-md-6">
+                                <h6>Your Trip History</h6>
+                                <div id="tripHistory">
+                                    <!-- Trip history will be loaded here -->
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex">
-                                    <i class="fas fa-arrow-up text-primary fa-2x me-3"></i>
-                                    <div>
-                                        <h6>Room for Improvement</h6>
-                                        <p class="text-muted mb-0">You can still improve by 1.3 L/100km to reach best practice.</p>
-                                    </div>
+                            <div class="col-md-6">
+                                <h6>Efficiency Trends</h6>
+                                <div id="efficiencyTrends">
+                                    <!-- Efficiency trends will be loaded here -->
                                 </div>
                             </div>
                         </div>
@@ -181,5 +229,289 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/common.js"></script>
+    <script>
+        // Enable compare button when trip is selected
+        document.getElementById('tripSelect').addEventListener('change', function() {
+            const compareBtn = document.getElementById('compareBtn');
+            compareBtn.disabled = !this.value;
+        });
+        
+        // Load trip comparison
+        function loadTripComparison() {
+            const tripId = document.getElementById('tripSelect').value;
+            if (!tripId) {
+                alert('Please select a trip first.');
+                return;
+            }
+            
+            console.log('Loading comparison for trip ID:', tripId);
+            
+            // Show loading state
+            document.getElementById('comparisonResults').style.display = 'block';
+            document.getElementById('comparisonContent').innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                    <p>Loading comparison data...</p>
+                </div>
+            `;
+            
+            // Fetch comparison data
+            fetch(`/api/benchmark/compare?tripId=${tripId}`)
+                .then(response => {
+                    console.log('Comparison API response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Comparison API response data:', data);
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    displayComparisonResults(data);
+                    displayDetailedAnalysis(data);
+                    displayHistoricalComparison();
+                    
+                })
+                .catch(error => {
+                    console.error('Error loading comparison:', error);
+                    document.getElementById('comparisonContent').innerHTML = `
+                        <div class="text-center text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                            <h6>Error Loading Comparison</h6>
+                            <p>${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadTripComparison()">
+                                <i class="fas fa-redo me-1"></i>Retry
+                            </button>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Display comparison results
+        function displayComparisonResults(data) {
+            const statusClass = data.statusColor;
+            const statusIcon = getStatusIcon(data.statusColor);
+            
+            document.getElementById('comparisonContent').innerHTML = `
+                <div class="comparison-result ${statusClass} p-4 rounded">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-user me-2"></i>Your Performance</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Fuel Consumption:</span>
+                                <span class="fw-bold">${data.userEfficiency} L/100km</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Route:</span>
+                                <span class="fw-bold">${data.tripDetails.fromCity} → ${data.tripDetails.toCity}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Distance:</span>
+                                <span class="fw-bold">${data.tripDetails.distanceKm} km</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-industry me-2"></i>Factory Specification</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Fuel Efficiency:</span>
+                                <span class="fw-bold">${data.factoryEfficiency} L/100km</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Difference:</span>
+                                <span class="fw-bold ${data.difference > 0 ? 'text-danger' : 'text-success'}">
+                                    ${data.difference > 0 ? '+' : ''}${data.difference} L/100km
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Percentage:</span>
+                                <span class="fw-bold ${data.percentageDifference > 0 ? 'text-danger' : 'text-success'}">
+                                    ${data.percentageDifference > 0 ? '+' : ''}${data.percentageDifference}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <h5 class="mb-2">
+                            ${statusIcon} ${data.efficiencyStatus}
+                        </h5>
+                        <div class="progress mt-3">
+                            <div class="progress-bar bg-${statusClass}" style="width: ${Math.min(Math.abs(data.percentageDifference) * 2, 100)}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Display detailed analysis
+        function displayDetailedAnalysis(data) {
+            document.getElementById('detailedAnalysis').style.display = 'block';
+            
+            // Vehicle information (compact)
+            document.getElementById('vehicleInfo').innerHTML = `
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span><strong>Year:</strong></span>
+                        <span>${data.tripDetails.year}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span><strong>Make:</strong></span>
+                        <span>${data.tripDetails.make}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span><strong>Model:</strong></span>
+                        <span>${data.tripDetails.model}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span><strong>Engine:</strong></span>
+                        <span>${data.factoryData.engine_type || 'Unknown'}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span><strong>Transmission:</strong></span>
+                        <span>${data.factoryData.transmission || 'Unknown'}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><strong>Body:</strong></span>
+                        <span>${data.factoryData.body_type || 'Unknown'}</span>
+                    </div>
+                </div>
+                ${data.factoryData.note ? `<div class="alert alert-info mt-2 py-1"><small>${data.factoryData.note}</small></div>` : ''}
+            `;
+            
+            // Recommendations (compact)
+            let recommendations = '';
+            if (data.percentageDifference <= -10) {
+                recommendations = `
+                    <div class="text-center">
+                        <i class="fas fa-star text-success fa-2x mb-2"></i>
+                        <h6 class="text-success">Excellent!</h6>
+                        <small class="text-muted">You're beating factory ratings. Keep it up!</small>
+                    </div>
+                `;
+            } else if (data.percentageDifference <= 0) {
+                recommendations = `
+                    <div class="text-center">
+                        <i class="fas fa-thumbs-up text-info fa-2x mb-2"></i>
+                        <h6 class="text-info">Good Job!</h6>
+                        <small class="text-muted">Meeting factory expectations. Consider gentle acceleration.</small>
+                    </div>
+                `;
+            } else if (data.percentageDifference <= 20) {
+                recommendations = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-warning fa-2x mb-2"></i>
+                        <h6 class="text-warning">Can Improve</h6>
+                        <small class="text-muted">Reduce aggressive driving and check tire pressure.</small>
+                    </div>
+                `;
+            } else {
+                recommendations = `
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-circle text-danger fa-2x mb-2"></i>
+                        <h6 class="text-danger">Needs Work</h6>
+                        <small class="text-muted">Consider maintenance and driving style adjustments.</small>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('recommendations').innerHTML = recommendations;
+            
+            // Quick Stats
+            document.getElementById('quickStats').innerHTML = `
+                <div class="text-center">
+                    <div class="row text-center">
+                        <div class="col-6 mb-2">
+                            <div class="border rounded p-2">
+                                <h6 class="text-primary mb-0">${data.userEfficiency}</h6>
+                                <small class="text-muted">Your L/100km</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="border rounded p-2">
+                                <h6 class="text-info mb-0">${data.factoryEfficiency}</h6>
+                                <small class="text-muted">Factory L/100km</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6 mb-2">
+                            <div class="border rounded p-2">
+                                <h6 class="text-${data.difference > 0 ? 'danger' : 'success'} mb-0">${data.difference > 0 ? '+' : ''}${data.difference}</h6>
+                                <small class="text-muted">Difference</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <div class="border rounded p-2">
+                                <h6 class="text-${data.percentageDifference > 0 ? 'danger' : 'success'} mb-0">${data.percentageDifference > 0 ? '+' : ''}${data.percentageDifference}%</h6>
+                                <small class="text-muted">Percentage</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Display historical comparison
+        function displayHistoricalComparison() {
+            document.getElementById('historicalComparison').style.display = 'block';
+            
+            // Load user's trip history
+            fetch('/api/benchmark/trips')
+                .then(response => response.json())
+                .then(trips => {
+                    const tripHistory = trips.map(trip => `
+                        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                            <div>
+                                <small class="text-muted">${new Date(trip.createdAt).toLocaleDateString()}</small><br>
+                                <strong>${trip.fromCity} → ${trip.toCity}</strong>
+                            </div>
+                            <span class="badge bg-primary">${trip.fuelConsumption} L/100km</span>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('tripHistory').innerHTML = tripHistory || '<p class="text-muted">No trip history available</p>';
+                    
+                    // Calculate efficiency trends
+                    const efficiencies = trips.map(t => t.fuelConsumption);
+                    const avgEfficiency = efficiencies.reduce((a, b) => a + b, 0) / efficiencies.length;
+                    const minEfficiency = Math.min(...efficiencies);
+                    const maxEfficiency = Math.max(...efficiencies);
+                    
+                    document.getElementById('efficiencyTrends').innerHTML = `
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h6 class="text-success">${minEfficiency.toFixed(1)}</h6>
+                                <small>Best</small>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="text-primary">${avgEfficiency.toFixed(1)}</h6>
+                                <small>Average</small>
+                            </div>
+                            <div class="col-4">
+                                <h6 class="text-warning">${maxEfficiency.toFixed(1)}</h6>
+                                <small>Worst</small>
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error loading trip history:', error);
+                    document.getElementById('tripHistory').innerHTML = '<p class="text-muted">Error loading trip history</p>';
+                    document.getElementById('efficiencyTrends').innerHTML = '<p class="text-muted">Error loading efficiency trends</p>';
+                });
+        }
+        
+        // Get status icon
+        function getStatusIcon(statusColor) {
+            switch (statusColor) {
+                case 'success': return '<i class="fas fa-star text-success"></i>';
+                case 'info': return '<i class="fas fa-thumbs-up text-info"></i>';
+                case 'warning': return '<i class="fas fa-exclamation-triangle text-warning"></i>';
+                case 'danger': return '<i class="fas fa-exclamation-circle text-danger"></i>';
+                default: return '<i class="fas fa-info-circle text-primary"></i>';
+            }
+        }
+    </script>
 </body>
 </html> 

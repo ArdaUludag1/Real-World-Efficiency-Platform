@@ -134,7 +134,7 @@
                         <div class="detail-item"><span class="detail-label">Make:</span> <span class="detail-value" th:text="${vehicle.make} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Model:</span> <span class="detail-value" th:text="${vehicle.model} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Trim:</span> <span class="detail-value" th:text="${vehicle.trim} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Body Type:</span> <span class="detail-value" th:text="${vehicle.modelBody} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Year:</span> <span class="detail-value" th:text="${vehicle.year} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Doors:</span> <span class="detail-value" th:text="${vehicle.modelDoors} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Seats:</span> <span class="detail-value" th:text="${vehicle.modelSeats} ?: '-'"/></div>
                     </div>
@@ -142,11 +142,11 @@
                     <div class="specs-card">
                         <div class="specs-title">Engine & Performance</div>
                         <div class="detail-item"><span class="detail-label">Engine Type:</span> <span class="detail-value" th:text="${vehicle.modelEngineType} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Engine Size:</span> <span class="detail-value" th:text="${vehicle.modelEngineCc} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Engine Size (cc):</span> <span class="detail-value" th:text="${vehicle.modelEngineCc} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Cylinders:</span> <span class="detail-value" th:text="${vehicle.modelEngineCyl} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Engine Position:</span> <span class="detail-value" th:text="${vehicle.modelEnginePosition} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Transmission:</span> <span class="detail-value" th:text="${vehicle.modelTransmissionType} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">0-100 km/h:</span> <span class="detail-value" th:text="${vehicle.model0To100Kph} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Top Speed:</span> <span class="detail-value" th:text="${vehicle.modelTopSpeedKph} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Drive:</span> <span class="detail-value" th:text="${vehicle.modelDrive} ?: '-'"/></div>
                     </div>
                     <!-- Fuel & Efficiency -->
                     <div class="specs-card">
@@ -154,16 +154,17 @@
                         <div class="detail-item"><span class="detail-label">City (L/100km):</span> <span class="detail-value" th:text="${vehicle.modelLkmCity} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Highway (L/100km):</span> <span class="detail-value" th:text="${vehicle.modelLkmHwy} ?: '-'"/></div>
                         <div class="detail-item"><span class="detail-label">Mixed (L/100km):</span> <span class="detail-value" th:text="${vehicle.modelLkmMixed} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Fuel Capacity:</span> <span class="detail-value" th:text="${vehicle.modelFuelCapL} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Fuel Capacity (L):</span> <span class="detail-value" th:text="${vehicle.modelFuelCapL} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Engine Fuel:</span> <span class="detail-value" th:text="${vehicle.modelEngineFuel} ?: '-'"/></div>
                     </div>
                     <!-- Dimensions -->
                     <div class="specs-card">
                         <div class="specs-title">Dimensions</div>
-                        <div class="detail-item"><span class="detail-label">Length:</span> <span class="detail-value" th:text="${vehicle.modelLengthMm} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Width:</span> <span class="detail-value" th:text="${vehicle.modelWidthMm} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Height:</span> <span class="detail-value" th:text="${vehicle.modelHeightMm} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Wheelbase:</span> <span class="detail-value" th:text="${vehicle.modelWheelbaseMm} ?: '-'"/></div>
-                        <div class="detail-item"><span class="detail-label">Weight:</span> <span class="detail-value" th:text="${vehicle.modelWeightKg} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Length (mm):</span> <span class="detail-value" th:text="${vehicle.modelLengthMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Width (mm):</span> <span class="detail-value" th:text="${vehicle.modelWidthMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Height (mm):</span> <span class="detail-value" th:text="${vehicle.modelHeightMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Wheelbase (mm):</span> <span class="detail-value" th:text="${vehicle.modelWheelbaseMm} ?: '-'"/></div>
+                        <div class="detail-item"><span class="detail-label">Weight (kg):</span> <span class="detail-value" th:text="${vehicle.modelWeightKg} ?: '-'"/></div>
                     </div>
                 </div>
             </div>
@@ -602,7 +603,7 @@
                 document.getElementById('resultsText').textContent = 
                     `Showing detailed information for ${details.make} ${details.model} ${details.trim} (${details.year})`;
                 
-                // Update detail fields
+                // Update detail fields - using the correct API response field names
                 document.getElementById('detailMake').textContent = details.make || '-';
                 document.getElementById('detailModel').textContent = details.model || '-';
                 document.getElementById('detailTrim').textContent = details.trim || '-';
@@ -612,33 +613,32 @@
                 
                 // Engine & Performance
                 document.getElementById('detailEngineType').textContent = details.engine_type || '-';
-                document.getElementById('detailEngineSize').textContent = details.engine_cc ? `${details.engine_cc} cc` : '-';
-                document.getElementById('detailCylinders').textContent = details.engine_cylinders || '-';
-                document.getElementById('detailTransmission').textContent = details.transmission_type ? 
-                    `${details.transmission_type} ${details.transmission_gears || ''}`.trim() : '-';
-                document.getElementById('detailAcceleration').textContent = details.zero_to_100_kph ? 
-                    `${details.zero_to_100_kph} seconds` : '-';
-                document.getElementById('detailTopSpeed').textContent = details.top_speed_kph ? 
-                    `${details.top_speed_kph} km/h` : '-';
+                document.getElementById('detailEngineSize').textContent = details.engine_size ? `${details.engine_size} cc` : '-';
+                document.getElementById('detailCylinders').textContent = details.cylinders || '-';
+                document.getElementById('detailTransmission').textContent = details.transmission || '-';
+                document.getElementById('detailAcceleration').textContent = details.acceleration ? 
+                    `${details.acceleration} seconds` : '-';
+                document.getElementById('detailTopSpeed').textContent = details.top_speed ? 
+                    `${details.top_speed} km/h` : '-';
                 
                 // Fuel & Efficiency
-                document.getElementById('detailFuelCity').textContent = details.fuel_consumption_city || '-';
-                document.getElementById('detailFuelHighway').textContent = details.fuel_consumption_highway || '-';
-                document.getElementById('detailFuelMixed').textContent = details.fuel_consumption_mixed || '-';
-                document.getElementById('detailFuelCapacity').textContent = details.fuel_capacity_l ? 
-                    `${details.fuel_capacity_l} L` : '-';
+                document.getElementById('detailFuelCity').textContent = details.city_l_per_100km || '-';
+                document.getElementById('detailFuelHighway').textContent = details.highway_l_per_100km || '-';
+                document.getElementById('detailFuelMixed').textContent = details.mixed_l_per_100km || '-';
+                document.getElementById('detailFuelCapacity').textContent = details.fuel_capacity ? 
+                    `${details.fuel_capacity} L` : '-';
                 
                 // Dimensions
-                document.getElementById('detailLength').textContent = details.length_mm ? 
-                    `${details.length_mm} mm` : '-';
-                document.getElementById('detailWidth').textContent = details.width_mm ? 
-                    `${details.width_mm} mm` : '-';
-                document.getElementById('detailHeight').textContent = details.height_mm ? 
-                    `${details.height_mm} mm` : '-';
-                document.getElementById('detailWheelbase').textContent = details.wheelbase_mm ? 
-                    `${details.wheelbase_mm} mm` : '-';
-                document.getElementById('detailWeight').textContent = details.weight_kg ? 
-                    `${details.weight_kg} kg` : '-';
+                document.getElementById('detailLength').textContent = details.length ? 
+                    `${details.length} mm` : '-';
+                document.getElementById('detailWidth').textContent = details.width ? 
+                    `${details.width} mm` : '-';
+                document.getElementById('detailHeight').textContent = details.height ? 
+                    `${details.height} mm` : '-';
+                document.getElementById('detailWheelbase').textContent = details.wheelbase ? 
+                    `${details.wheelbase} mm` : '-';
+                document.getElementById('detailWeight').textContent = details.weight ? 
+                    `${details.weight} kg` : '-';
                 
                 hideNoResults();
                 showResults();

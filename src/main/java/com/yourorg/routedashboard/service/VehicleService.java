@@ -898,4 +898,103 @@ public class VehicleService {
     public boolean isDatabaseEmpty() {
         return vehicleRepository.count() == 0;
     }
+    
+    public Map<String, Object> getVehicleFactoryData(String year, String make, String model) {
+        try {
+            System.out.println("VehicleService: Fetching factory data for " + year + " " + make + " " + model);
+            
+            // Try to get vehicle details from CarQueryAPI
+            Map<String, Object> vehicleDetails = getVehicleDetails(make, model, "", Integer.parseInt(year));
+            
+            if (vehicleDetails.containsKey("error")) {
+                System.out.println("VehicleService: Could not fetch factory data from API, using fallback");
+                return getFallbackFactoryData(year, make, model);
+            }
+            
+            // Extract efficiency data
+            Map<String, Object> factoryData = new HashMap<>();
+            factoryData.put("year", year);
+            factoryData.put("make", make);
+            factoryData.put("model", model);
+            
+            // Get fuel efficiency from vehicle details
+            if (vehicleDetails.containsKey("fuel_efficiency")) {
+                factoryData.put("fuel_efficiency", vehicleDetails.get("fuel_efficiency"));
+            } else {
+                // Use fallback efficiency based on vehicle type
+                factoryData.put("fuel_efficiency", getFallbackEfficiency(make, model));
+            }
+            
+            // Add other relevant factory data
+            if (vehicleDetails.containsKey("engine_type")) {
+                factoryData.put("engine_type", vehicleDetails.get("engine_type"));
+            }
+            if (vehicleDetails.containsKey("transmission")) {
+                factoryData.put("transmission", vehicleDetails.get("transmission"));
+            }
+            if (vehicleDetails.containsKey("body_type")) {
+                factoryData.put("body_type", vehicleDetails.get("body_type"));
+            }
+            
+            System.out.println("VehicleService: Factory data retrieved successfully: " + factoryData);
+            return factoryData;
+            
+        } catch (Exception e) {
+            System.err.println("VehicleService: Error fetching factory data: " + e.getMessage());
+            e.printStackTrace();
+            return getFallbackFactoryData(year, make, model);
+        }
+    }
+    
+    private Map<String, Object> getFallbackFactoryData(String year, String make, String model) {
+        Map<String, Object> fallbackData = new HashMap<>();
+        fallbackData.put("year", year);
+        fallbackData.put("make", make);
+        fallbackData.put("model", model);
+        fallbackData.put("fuel_efficiency", getFallbackEfficiency(make, model));
+        fallbackData.put("engine_type", "Unknown");
+        fallbackData.put("transmission", "Unknown");
+        fallbackData.put("body_type", "Unknown");
+        fallbackData.put("note", "Factory data estimated based on vehicle type");
+        
+        return fallbackData;
+    }
+    
+    private double getFallbackEfficiency(String make, String model) {
+        // Provide reasonable fallback efficiency based on common vehicle types
+        String makeLower = make.toLowerCase();
+        String modelLower = model.toLowerCase();
+        
+        // Luxury/Performance vehicles (higher consumption)
+        if (makeLower.contains("bmw") || makeLower.contains("mercedes") || makeLower.contains("audi") || 
+            makeLower.contains("lexus") || makeLower.contains("porsche")) {
+            return 10.5;
+        }
+        
+        // SUVs and trucks (higher consumption)
+        if (modelLower.contains("suv") || modelLower.contains("truck") || modelLower.contains("pickup") ||
+            modelLower.contains("explorer") || modelLower.contains("escape") || modelLower.contains("cr-v") ||
+            modelLower.contains("rav4") || modelLower.contains("highlander")) {
+            return 9.5;
+        }
+        
+        // Compact cars (lower consumption)
+        if (modelLower.contains("civic") || modelLower.contains("corolla") || modelLower.contains("focus") ||
+            modelLower.contains("sentra") || modelLower.contains("elantra") || modelLower.contains("forte")) {
+            return 7.0;
+        }
+        
+        // Hybrid vehicles (very low consumption)
+        if (modelLower.contains("hybrid") || modelLower.contains("prius") || modelLower.contains("insight")) {
+            return 4.5;
+        }
+        
+        // Electric vehicles (very low consumption)
+        if (modelLower.contains("electric") || modelLower.contains("ev") || modelLower.contains("tesla")) {
+            return 2.0; // kWh/100km equivalent
+        }
+        
+        // Default for sedans and other vehicles
+        return 8.0;
+    }
 } 
