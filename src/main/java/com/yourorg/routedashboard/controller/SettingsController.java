@@ -1,30 +1,260 @@
 package com.yourorg.routedashboard.controller;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import java.nio.charset.StandardCharsets;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 public class SettingsController {
     
+    @Autowired
+    private com.yourorg.routedashboard.service.UserService userService;
+
     @GetMapping("/settings")
-    public String settingsPage(Model model) {
-        model.addAttribute("username", "user@example.com");
-        model.addAttribute("notifications", true);
-        model.addAttribute("units", "metric");
+    public String settingsPage(Model model, HttpServletRequest request) {
+        String theme = "auto";
+        String backgroundStyle = "light";
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("theme".equals(cookie.getName())) {
+                    theme = cookie.getValue();
+                }
+                if ("backgroundStyle".equals(cookie.getName())) {
+                    backgroundStyle = cookie.getValue();
+                }
+            }
+        }
+        model.addAttribute("theme", theme);
+        model.addAttribute("backgroundStyle", backgroundStyle);
         return "settings";
     }
     
-    @PostMapping("/settings/update")
-    public String updateSettings(@RequestParam String username,
-                               @RequestParam(required = false) Boolean notifications,
-                               @RequestParam String units,
-                               Model model) {
-        
-        // For now, just redirect back to settings page
-        // In a real app, you would save these settings to the database
+    @PostMapping(value = "/settings/update", consumes = {"multipart/form-data"})
+    public String updateSettings(
+            @RequestParam(required = false) String theme,
+            @RequestParam(required = false) String backgroundStyle,
+            @RequestParam(required = false) String fontSize,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String confirmEmail,
+            @RequestParam(required = false) String currentPassword,
+            @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String confirmPassword,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar,
+            HttpServletResponse response,
+            RedirectAttributes redirectAttributes) {
+        // Theme and appearance
+        if (theme != null) {
+            Cookie themeCookie = new Cookie("theme", theme);
+            themeCookie.setPath("/");
+            themeCookie.setMaxAge(60 * 60 * 24 * 365); // 1 year
+            response.addCookie(themeCookie);
+        }
+        if (backgroundStyle != null) {
+            Cookie bgCookie = new Cookie("backgroundStyle", backgroundStyle);
+            bgCookie.setPath("/");
+            bgCookie.setMaxAge(60 * 60 * 24 * 365); // 1 year
+            response.addCookie(bgCookie);
+        }
+        if (fontSize != null) {
+            Cookie fontSizeCookie = new Cookie("fontSize", fontSize);
+            fontSizeCookie.setPath("/");
+            fontSizeCookie.setMaxAge(60 * 60 * 24 * 365);
+            response.addCookie(fontSizeCookie);
+        }
+        // Email change
+        if (email != null && !email.isBlank()) {
+            if (!email.equals(confirmEmail)) {
+                redirectAttributes.addFlashAttribute("error", "Email addresses do not match.");
+                return "redirect:/settings";
+            }
+            // TODO: Call userService to update email
+            // userService.updateEmail(currentUser, email);
+            redirectAttributes.addFlashAttribute("success", "Email updated successfully.");
+        }
+        // Password change
+        if (currentPassword != null && !currentPassword.isBlank() && newPassword != null && !newPassword.isBlank()) {
+            if (!newPassword.equals(confirmPassword)) {
+                redirectAttributes.addFlashAttribute("error", "New passwords do not match.");
+                return "redirect:/settings";
+            }
+            // TODO: Call userService to update password (with current password verification)
+            // boolean changed = userService.updatePassword(currentUser, currentPassword, newPassword);
+            // if (!changed) {
+            //     redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
+            //     return "redirect:/settings";
+            // }
+            redirectAttributes.addFlashAttribute("success", "Password updated successfully.");
+        }
+        // Avatar upload
+        if (avatar != null && !avatar.isEmpty()) {
+            // TODO: Call userService to save avatar and update user profile
+            // String avatarUrl = userService.saveAvatar(currentUser, avatar);
+            // redirectAttributes.addFlashAttribute("avatarUrl", avatarUrl);
+            redirectAttributes.addFlashAttribute("success", "Profile picture updated.");
+        }
         return "redirect:/settings?updated=true";
+    }
+
+    @PostMapping("/settings/update-email")
+    public String updateEmail(@RequestParam String email,
+                         @RequestParam String confirmEmail,
+                         @RequestParam String currentPassword,
+                         RedirectAttributes redirectAttributes,
+                         HttpServletRequest request) {
+        if (!email.equals(confirmEmail)) {
+            redirectAttributes.addFlashAttribute("error", "Email addresses do not match.");
+            return "redirect:/settings";
+        }
+        // Get current email from session or authentication (for demo, get from cookie or param)
+        String currentEmail = null;
+        if (request.getUserPrincipal() != null) {
+            currentEmail = request.getUserPrincipal().getName();
+        } else {
+            // Fallback: try to get from a cookie or param (customize as needed)
+            currentEmail = request.getParameter("currentEmail");
+        }
+        if (currentEmail == null) {
+            redirectAttributes.addFlashAttribute("error", "Unable to determine current email.");
+            return "redirect:/settings";
+        }
+        boolean success = userService.updateEmail(currentEmail, email, currentPassword);
+        if (!success) {
+            redirectAttributes.addFlashAttribute("error", "Current password is incorrect or new email is already taken.");
+            return "redirect:/settings";
+        }
+        redirectAttributes.addFlashAttribute("success", "Email updated successfully.");
+        return "redirect:/settings";
+    }
+
+    @PostMapping("/settings/update-password")
+    public String updatePassword(@RequestParam String currentPassword,
+                            @RequestParam String newPassword,
+                            @RequestParam String confirmPassword,
+                            RedirectAttributes redirectAttributes,
+                            HttpServletRequest request) {
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("error", "New passwords do not match.");
+            return "redirect:/settings";
+        }
+        String username = null;
+        if (request.getUserPrincipal() != null) {
+            username = request.getUserPrincipal().getName();
+        }
+        if (username == null) {
+            redirectAttributes.addFlashAttribute("error", "Unable to determine current user.");
+            return "redirect:/settings";
+        }
+        boolean success = userService.updatePassword(username, currentPassword, newPassword);
+        if (!success) {
+            redirectAttributes.addFlashAttribute("error", "Current password is incorrect.");
+            return "redirect:/settings";
+        }
+        redirectAttributes.addFlashAttribute("success", "Password updated successfully.");
+        return "redirect:/settings";
+    }
+
+    @PostMapping(value = "/settings/update-avatar", consumes = {"multipart/form-data"})
+    public String updateAvatar(@RequestPart("avatar") MultipartFile avatar,
+                          RedirectAttributes redirectAttributes) {
+        if (avatar != null && !avatar.isEmpty()) {
+            // TODO: Save avatar and update user profile
+            // String avatarUrl = userService.saveAvatar(currentUser, avatar);
+            // redirectAttributes.addFlashAttribute("avatarUrl", avatarUrl);
+            redirectAttributes.addFlashAttribute("success", "Profile picture updated.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "No file selected.");
+        }
+        return "redirect:/settings";
+    }
+
+    @PostMapping("/settings/update-appearance")
+    public String updateAppearance(@RequestParam(required = false) String theme,
+                              @RequestParam(required = false) String backgroundStyle,
+                              @RequestParam(required = false) String fontSize,
+                              HttpServletResponse response,
+                              RedirectAttributes redirectAttributes) {
+        if (theme != null) {
+            Cookie themeCookie = new Cookie("theme", theme);
+            themeCookie.setPath("/");
+            themeCookie.setMaxAge(60 * 60 * 24 * 365);
+            response.addCookie(themeCookie);
+        }
+        if (backgroundStyle != null) {
+            Cookie bgCookie = new Cookie("backgroundStyle", backgroundStyle);
+            bgCookie.setPath("/");
+            bgCookie.setMaxAge(60 * 60 * 24 * 365);
+            response.addCookie(bgCookie);
+        }
+        if (fontSize != null) {
+            Cookie fontSizeCookie = new Cookie("fontSize", fontSize);
+            fontSizeCookie.setPath("/");
+            fontSizeCookie.setMaxAge(60 * 60 * 24 * 365);
+            response.addCookie(fontSizeCookie);
+        }
+        redirectAttributes.addFlashAttribute("success", "Appearance updated.");
+        return "redirect:/settings";
+    }
+
+    @PostMapping("/settings/clear-data")
+    public String clearData(@RequestParam String email,
+                       @RequestParam String password,
+                       RedirectAttributes redirectAttributes) {
+        boolean success = userService.clearAllData(email, password);
+        if (!success) {
+            redirectAttributes.addFlashAttribute("error", "Email or password incorrect.");
+            return "redirect:/settings";
+        }
+        redirectAttributes.addFlashAttribute("success", "All your data has been cleared.");
+        return "redirect:/settings";
+    }
+
+    @PostMapping("/settings/delete-account")
+    public String deleteAccount(@RequestParam String email,
+                           @RequestParam String password,
+                           RedirectAttributes redirectAttributes) {
+        // TODO: Verify credentials and delete user account
+        // boolean success = userService.deleteAccount(currentUser, email, password);
+        // if (!success) { redirectAttributes.addFlashAttribute("error", "Email or password incorrect."); return "redirect:/settings"; }
+        // TODO: Invalidate session and redirect to goodbye page
+        redirectAttributes.addFlashAttribute("success", "Your account has been deleted.");
+        return "redirect:/settings";
+    }
+
+    @GetMapping("/settings/export-csv")
+    public ResponseEntity<byte[]> exportCsv() {
+        // TODO: Generate CSV data for user (trips, vehicles, etc.)
+        String csv = "id,name\n1,Trip1\n2,Trip2"; // Example
+        byte[] data = csv.getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=userdata.csv")
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(data);
+    }
+
+    @GetMapping("/settings/export-json")
+    public ResponseEntity<byte[]> exportJson() {
+        // TODO: Generate JSON data for user (trips, vehicles, etc.)
+        String json = "{\"trips\":[{\"id\":1,\"name\":\"Trip1\"}]}"; // Example
+        byte[] data = json.getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=userdata.json")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(data);
     }
 } 

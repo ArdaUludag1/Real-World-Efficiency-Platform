@@ -21,6 +21,13 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
+    @Autowired
+    private com.yourorg.routedashboard.repository.TripRepository tripRepository;
+    @Autowired
+    private com.yourorg.routedashboard.repository.VehicleRepository vehicleRepository;
+    @Autowired
+    private com.yourorg.routedashboard.repository.HistoryRepository historyRepository;
+
     // Authentication methods
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -88,5 +95,41 @@ public class UserService {
     // Check if email exists
     public boolean emailExists(String email) {
         return userRepository.findByEmail(email).isPresent();
+    }
+
+    @Transactional
+    public boolean clearAllData(String email, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) return false;
+        User user = userOpt.get();
+        if (!passwordEncoder.matches(password, user.getPassword())) return false;
+        Long userId = user.getId();
+        tripRepository.deleteByUserId(userId);
+        // Do NOT delete vehicles, as they are global/factory data
+        historyRepository.deleteByUser(user);
+        return true;
+    }
+
+    @Transactional
+    public boolean updateEmail(String currentEmail, String newEmail, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(currentEmail);
+        if (userOpt.isEmpty()) return false;
+        User user = userOpt.get();
+        if (!passwordEncoder.matches(password, user.getPassword())) return false;
+        if (userRepository.findByEmail(newEmail).isPresent()) return false; // Email already taken
+        user.setEmail(newEmail);
+        userRepository.save(user);
+        return true;
+    }
+
+    @Transactional
+    public boolean updatePassword(String username, String currentPassword, String newPassword) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) return false;
+        User user = userOpt.get();
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) return false;
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
     }
 } 

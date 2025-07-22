@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface HistoryRepository extends JpaRepository<History, Long> {
     List<History> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+    void deleteByUser(com.yourorg.routedashboard.entity.User user);
 } 

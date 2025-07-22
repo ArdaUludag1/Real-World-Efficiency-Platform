@@ -25,4 +25,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     
     // Count trips by user ID
     long countByUserId(Long userId);
+
+    void deleteByUserId(Long userId);
 } 
