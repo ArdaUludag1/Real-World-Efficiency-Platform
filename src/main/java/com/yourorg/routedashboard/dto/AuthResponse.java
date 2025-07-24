@@ -12,12 +12,7 @@ public class AuthResponse {
     private String email;
     private String token;
     
-    // Explicit constructor
-    public AuthResponse(String username, String email, String token) {
-        this.username = username;
-        this.email = email;
-        this.token = token;
-    }
+    // Removed explicit constructor (was duplicate)
     
     // Explicit getters and setters
     public String getUsername() { return username; }

@@ -14,10 +14,7 @@ import java.util.Map;
 public class HistoryController {
     private final HistoryService historyService;
     
-    // Explicit constructor
-    public HistoryController(HistoryService historyService) {
-        this.historyService = historyService;
-    }
+    // Removed explicit constructor (was duplicate)
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getHistory() {

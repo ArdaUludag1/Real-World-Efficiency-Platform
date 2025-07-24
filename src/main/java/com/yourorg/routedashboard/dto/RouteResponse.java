@@ -21,23 +21,7 @@ public class RouteResponse {
     private String weatherFrom;
     private String weatherTo;
     
-    // Explicit constructor
-    public RouteResponse(String make, String model, Integer year, String fromCity, String toCity,
-                       Double distance, Double baseConsumption, Double adjustedConsumption,
-                       Double difference, Double differencePercentage, String weatherFrom, String weatherTo) {
-        this.make = make;
-        this.model = model;
-        this.year = year;
-        this.fromCity = fromCity;
-        this.toCity = toCity;
-        this.distance = distance;
-        this.baseConsumption = baseConsumption;
-        this.adjustedConsumption = adjustedConsumption;
-        this.difference = difference;
-        this.differencePercentage = differencePercentage;
-        this.weatherFrom = weatherFrom;
-        this.weatherTo = weatherTo;
-    }
+    // Removed explicit constructor (was duplicate)
     
     // Explicit getters and setters
     public String getMake() { return make; }

@@ -24,14 +24,6 @@ public class VehicleService {
     private final ObjectMapper objectMapper;
     private final com.yourorg.routedashboard.repository.VehicleRepository vehicleRepository;
     
-    // Explicit constructor
-    public VehicleService(RestTemplate restTemplate, ObjectMapper objectMapper, 
-                         com.yourorg.routedashboard.repository.VehicleRepository vehicleRepository) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-        this.vehicleRepository = vehicleRepository;
-    }
-
     public List<String> getAllMakes() {
         List<String> makes = tryGetMakesFromMultipleSources();
         if (!makes.isEmpty()) {

@@ -31,15 +31,7 @@ public class RouteService {
     @Value("${google.api.key}")
     private String googleApiKey;
     
-    // Explicit constructor
-    public RouteService(VehicleRepository vehicleRepository, HistoryRepository historyRepository, 
-                       UserRepository userRepository, WeatherService weatherService, RestTemplate restTemplate) {
-        this.vehicleRepository = vehicleRepository;
-        this.historyRepository = historyRepository;
-        this.userRepository = userRepository;
-        this.weatherService = weatherService;
-        this.restTemplate = restTemplate;
-    }
+    // Removed explicit constructor (was duplicate)
 
     @Transactional
     public RouteResponse calculateRoute(RouteRequest request) {

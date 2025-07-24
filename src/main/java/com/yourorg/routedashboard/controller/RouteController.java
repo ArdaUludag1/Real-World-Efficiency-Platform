@@ -17,10 +17,7 @@ import java.util.Map;
 public class RouteController {
     private final RouteService routeService;
     
-    // Explicit constructor
-    public RouteController(RouteService routeService) {
-        this.routeService = routeService;
-    }
+    // Removed explicit constructor (was duplicate)
 
     @PostMapping
     public ResponseEntity<?> calculateRoute(@Valid @RequestBody RouteRequest request) {

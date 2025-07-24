@@ -22,12 +22,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     
-    // Explicit constructor
-    public AuthController(UserService userService, JwtUtil jwtUtil, UserRepository userRepository) {
-        this.userService = userService;
-        this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
-    }
+    // Removed explicit constructor (was duplicate)
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {

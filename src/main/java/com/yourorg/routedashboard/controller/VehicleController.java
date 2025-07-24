@@ -18,10 +18,7 @@ import java.util.List;
 public class VehicleController {
     private final VehicleService vehicleService;
     
-    // Explicit constructor
-    public VehicleController(VehicleService vehicleService) {
-        this.vehicleService = vehicleService;
-    }
+    // Removed explicit constructor (was duplicate)
 
     @GetMapping("/makes")
     public Object getMakes(@RequestParam Integer year) {

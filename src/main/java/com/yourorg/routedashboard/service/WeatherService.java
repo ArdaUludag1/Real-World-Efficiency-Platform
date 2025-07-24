@@ -16,12 +16,6 @@ public class WeatherService {
     @Value("${openweather.api.key:YOUR_OPENWEATHER_API_KEY}")
     private String openWeatherApiKey;
     
-    // Explicit constructor
-    public WeatherService(RestTemplate restTemplate, ObjectMapper objectMapper) {
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
-    }
-
     public String getWeatherData(String city) {
         // Check if API key is valid
         if (openWeatherApiKey == null || openWeatherApiKey.equals("YOUR_OPENWEATHER_API_KEY") || openWeatherApiKey.trim().isEmpty()) {

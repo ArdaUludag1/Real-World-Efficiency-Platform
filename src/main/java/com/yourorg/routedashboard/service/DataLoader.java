@@ -15,10 +15,8 @@ import java.io.InputStream;
 public class DataLoader implements CommandLineRunner {
     @Autowired
     private VehicleRepository vehicleRepository;
-
-    // Explicit constructor
-    public DataLoader() {
-    }
+    
+    // Removed explicit constructor (was duplicate)
 
     @Override
     public void run(String... args) throws Exception {

@@ -19,12 +19,6 @@ public class HistoryService {
     private final HistoryRepository historyRepository;
     private final UserRepository userRepository;
     
-    // Explicit constructor
-    public HistoryService(HistoryRepository historyRepository, UserRepository userRepository) {
-        this.historyRepository = historyRepository;
-        this.userRepository = userRepository;
-    }
-
     public List<Map<String, Object>> getUserHistory() {
         // In real app, get current user from security context
         // For demo, use first user
