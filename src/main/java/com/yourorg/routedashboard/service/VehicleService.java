@@ -158,8 +158,8 @@ public class VehicleService {
         headers.set("User-Agent", userAgent);
         headers.set("Accept", "application/json, text/plain, */*");
         headers.set("Accept-Language", "en-US,en;q=0.9");
-        headers.set("Referer", "https://www.carqueryapi.com/");
-        headers.set("Origin", "https://www.carqueryapi.com");
+        headers.set("Referer", "https://real-world-efficiency-platform-production.up.railway.app/");
+        headers.set("Origin", "https://real-world-efficiency-platform-production.up.railway.app");
         headers.set("Cache-Control", "no-cache");
         headers.set("Pragma", "no-cache");
         headers.set("Sec-Fetch-Dest", "empty");
@@ -425,7 +425,8 @@ public class VehicleService {
                     headers.set("User-Agent", userAgents[random.nextInt(userAgents.length)]);
                     headers.set("Accept", "application/json, text/plain, */*");
                     headers.set("Accept-Language", "en-US,en;q=0.9");
-                    headers.set("Referer", "https://www.carqueryapi.com/");
+                    headers.set("Referer", "https://real-world-efficiency-platform-production.up.railway.app/");
+                    headers.set("Origin", "https://real-world-efficiency-platform-production.up.railway.app");
                     headers.set("Cache-Control", "no-cache");
                     headers.set("Pragma", "no-cache");
                     
@@ -538,7 +539,8 @@ public class VehicleService {
                     headers.set("User-Agent", userAgents[random.nextInt(userAgents.length)]);
                     headers.set("Accept", "application/json, text/plain, */*");
                     headers.set("Accept-Language", "en-US,en;q=0.9");
-                    headers.set("Referer", "https://www.carqueryapi.com/");
+                    headers.set("Referer", "https://real-world-efficiency-platform-production.up.railway.app/");
+                    headers.set("Origin", "https://real-world-efficiency-platform-production.up.railway.app");
                     headers.set("Cache-Control", "no-cache");
                     headers.set("Pragma", "no-cache");
                     
@@ -638,7 +640,8 @@ public class VehicleService {
                     headers.set("User-Agent", userAgents[random.nextInt(userAgents.length)]);
                     headers.set("Accept", "application/json, text/plain, */*");
                     headers.set("Accept-Language", "en-US,en;q=0.9");
-                    headers.set("Referer", "https://www.carqueryapi.com/");
+                    headers.set("Referer", "https://real-world-efficiency-platform-production.up.railway.app/");
+                    headers.set("Origin", "https://real-world-efficiency-platform-production.up.railway.app");
                     headers.set("Cache-Control", "no-cache");
                     headers.set("Pragma", "no-cache");
                     HttpEntity<String> entity = new HttpEntity<>(headers);
