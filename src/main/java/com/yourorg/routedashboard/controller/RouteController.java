@@ -4,7 +4,6 @@ import com.yourorg.routedashboard.dto.RouteRequest;
 import com.yourorg.routedashboard.dto.RouteResponse;
 import com.yourorg.routedashboard.service.RouteService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,11 +12,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/route")
-@RequiredArgsConstructor
 public class RouteController {
     private final RouteService routeService;
-    
-    // Removed explicit constructor (was duplicate)
+
+    public RouteController(RouteService routeService) {
+        this.routeService = routeService;
+    }
 
     @PostMapping
     public ResponseEntity<?> calculateRoute(@Valid @RequestBody RouteRequest request) {

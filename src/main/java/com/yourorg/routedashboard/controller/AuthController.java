@@ -8,7 +8,6 @@ import com.yourorg.routedashboard.entity.User;
 import com.yourorg.routedashboard.repository.UserRepository;
 import com.yourorg.routedashboard.service.UserService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +15,16 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
-    
-    // Removed explicit constructor (was duplicate)
+
+    public AuthController(UserService userService, JwtUtil jwtUtil, UserRepository userRepository) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {

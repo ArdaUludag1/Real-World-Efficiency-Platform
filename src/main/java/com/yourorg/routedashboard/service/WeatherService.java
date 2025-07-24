@@ -2,16 +2,19 @@ package com.yourorg.routedashboard.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@RequiredArgsConstructor
 public class WeatherService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    
+    public WeatherService(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
     
     @Value("${openweather.api.key:YOUR_OPENWEATHER_API_KEY}")
     private String openWeatherApiKey;

@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class RouteService {
     private final VehicleRepository vehicleRepository;
     private final HistoryRepository historyRepository;
@@ -31,7 +30,19 @@ public class RouteService {
     @Value("${google.api.key}")
     private String googleApiKey;
     
-    // Removed explicit constructor (was duplicate)
+    public RouteService(
+        VehicleRepository vehicleRepository,
+        HistoryRepository historyRepository,
+        UserRepository userRepository,
+        WeatherService weatherService,
+        RestTemplate restTemplate
+    ) {
+        this.vehicleRepository = vehicleRepository;
+        this.historyRepository = historyRepository;
+        this.userRepository = userRepository;
+        this.weatherService = weatherService;
+        this.restTemplate = restTemplate;
+    }
 
     @Transactional
     public RouteResponse calculateRoute(RouteRequest request) {

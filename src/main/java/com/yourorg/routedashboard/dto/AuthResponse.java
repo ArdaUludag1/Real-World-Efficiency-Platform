@@ -1,18 +1,16 @@
 package com.yourorg.routedashboard.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class AuthResponse {
     private String username;
     private String email;
     private String token;
     
-    // Removed explicit constructor (was duplicate)
+    public AuthResponse() {}
+    public AuthResponse(String username, String email, String token) {
+        this.username = username;
+        this.email = email;
+        this.token = token;
+    }
     
     // Explicit getters and setters
     public String getUsername() { return username; }

@@ -4,7 +4,6 @@ import com.yourorg.routedashboard.entity.History;
 import com.yourorg.routedashboard.entity.User;
 import com.yourorg.routedashboard.repository.HistoryRepository;
 import com.yourorg.routedashboard.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +13,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class HistoryService {
     private final HistoryRepository historyRepository;
     private final UserRepository userRepository;
+
+    public HistoryService(HistoryRepository historyRepository, UserRepository userRepository) {
+        this.historyRepository = historyRepository;
+        this.userRepository = userRepository;
+    }
     
     public List<Map<String, Object>> getUserHistory() {
         // In real app, get current user from security context

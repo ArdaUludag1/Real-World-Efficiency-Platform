@@ -2,7 +2,6 @@ package com.yourorg.routedashboard.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,11 +17,16 @@ import java.util.Random;
 import com.yourorg.routedashboard.entity.Vehicle;
 
 @Service
-@RequiredArgsConstructor
 public class VehicleService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final com.yourorg.routedashboard.repository.VehicleRepository vehicleRepository;
+
+    public VehicleService(RestTemplate restTemplate, ObjectMapper objectMapper, com.yourorg.routedashboard.repository.VehicleRepository vehicleRepository) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.vehicleRepository = vehicleRepository;
+    }
     
     public List<String> getAllMakes() {
         List<String> makes = tryGetMakesFromMultipleSources();

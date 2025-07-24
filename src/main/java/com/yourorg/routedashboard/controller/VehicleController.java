@@ -14,9 +14,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vehicles")
-@RequiredArgsConstructor
 public class VehicleController {
     private final VehicleService vehicleService;
+
+    public VehicleController(VehicleService vehicleService) {
+        this.vehicleService = vehicleService;
+    }
     
     // Removed explicit constructor (was duplicate)
 
