@@ -21,6 +21,7 @@ com\yourorg\routedashboard\controller\BenchmarkController.class
 com\yourorg\routedashboard\repository\VehicleRepository.class
 com\yourorg\routedashboard\config\RestTemplateConfig.class
 com\yourorg\routedashboard\RouteDashboardApplication.class
+com\yourorg\routedashboard\repository\ContactRepository.class
 com\yourorg\routedashboard\controller\SettingsController.class
 com\yourorg\routedashboard\dto\RouteRequest.class
 com\yourorg\routedashboard\service\DataLoader.class
@@ -29,11 +30,15 @@ com\yourorg\routedashboard\repository\UserRepository.class
 com\yourorg\routedashboard\service\VehicleService.class
 com\yourorg\routedashboard\dto\AuthResponse.class
 com\yourorg\routedashboard\dto\RegisterRequest.class
+com\yourorg\routedashboard\controller\ContactController.class
+com\yourorg\routedashboard\entity\ContactMessage.class
 com\yourorg\routedashboard\service\TripService.class
 com\yourorg\routedashboard\controller\VehicleController.class
 com\yourorg\routedashboard\config\JwtUtil.class
 com\yourorg\routedashboard\dto\RouteResponse.class
 com\yourorg\routedashboard\controller\HistoryController.class
+com\yourorg\routedashboard\dto\ContactForm.class
+com\yourorg\routedashboard\service\ContactService.class
 com\yourorg\routedashboard\dto\SettingsRequest.class
 com\yourorg\routedashboard\entity\History.class
 com\yourorg\routedashboard\entity\Trip.class

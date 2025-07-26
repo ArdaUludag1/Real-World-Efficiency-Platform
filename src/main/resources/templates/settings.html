@@ -113,24 +113,6 @@
                         </div>
                     </form>
 
-                    <!-- Profile: Avatar Upload -->
-                    <form method="post" action="/settings/update-avatar" enctype="multipart/form-data" class="mb-4">
-                        <div class="row">
-                            <div class="col-12">
-                                <h6 class="text-primary mb-3"><i class="fas fa-user-circle me-2"></i>Profile Picture</h6>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <input type="file" class="form-control" id="avatar" name="avatar" accept="image/*">
-                                <div class="mt-2">
-                                    <img id="avatarPreview" src="/images/default-avatar.png" alt="Avatar Preview" class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;">
-                                </div>
-                            </div>
-                            <div class="col-12 text-end">
-                                <button type="submit" class="btn btn-primary">Upload Avatar</button>
-                            </div>
-                        </div>
-                    </form>
-
                     <!-- Theme & Appearance: Font Size, Theme, Background -->
                     <form method="post" action="/settings/update-appearance" class="mb-4">
                         <div class="row">

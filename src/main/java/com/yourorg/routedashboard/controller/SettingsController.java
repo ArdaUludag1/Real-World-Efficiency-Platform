@@ -55,7 +55,6 @@ public class SettingsController {
             @RequestParam(required = false) String currentPassword,
             @RequestParam(required = false) String newPassword,
             @RequestParam(required = false) String confirmPassword,
-            @RequestPart(value = "avatar", required = false) MultipartFile avatar,
             HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
         // Theme and appearance
@@ -100,13 +99,6 @@ public class SettingsController {
             //     return "redirect:/settings";
             // }
             redirectAttributes.addFlashAttribute("success", "Password updated successfully.");
-        }
-        // Avatar upload
-        if (avatar != null && !avatar.isEmpty()) {
-            // TODO: Call userService to save avatar and update user profile
-            // String avatarUrl = userService.saveAvatar(currentUser, avatar);
-            // redirectAttributes.addFlashAttribute("avatarUrl", avatarUrl);
-            redirectAttributes.addFlashAttribute("success", "Profile picture updated.");
         }
         return "redirect:/settings?updated=true";
     }
@@ -166,20 +158,6 @@ public class SettingsController {
             return "redirect:/settings";
         }
         redirectAttributes.addFlashAttribute("success", "Password updated successfully.");
-        return "redirect:/settings";
-    }
-
-    @PostMapping(value = "/settings/update-avatar", consumes = {"multipart/form-data"})
-    public String updateAvatar(@RequestPart("avatar") MultipartFile avatar,
-                          RedirectAttributes redirectAttributes) {
-        if (avatar != null && !avatar.isEmpty()) {
-            // TODO: Save avatar and update user profile
-            // String avatarUrl = userService.saveAvatar(currentUser, avatar);
-            // redirectAttributes.addFlashAttribute("avatarUrl", avatarUrl);
-            redirectAttributes.addFlashAttribute("success", "Profile picture updated.");
-        } else {
-            redirectAttributes.addFlashAttribute("error", "No file selected.");
-        }
         return "redirect:/settings";
     }
 
