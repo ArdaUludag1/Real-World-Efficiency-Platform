@@ -19,12 +19,33 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.yourorg.routedashboard.config.JwtUtil;
+import com.yourorg.routedashboard.entity.User;
 
 @Controller
 public class SettingsController {
     
     @Autowired
     private com.yourorg.routedashboard.service.UserService userService;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    // Helper method to get current user from JWT token
+    private User getCurrentUser(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (jwtUtil.validateToken(token)) {
+                        String username = jwtUtil.getUsernameFromToken(token);
+                        return userService.getUserByUsername(username).orElse(null);
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
     @GetMapping("/settings")
     public String settingsPage(Model model, HttpServletRequest request) {
@@ -205,13 +226,24 @@ public class SettingsController {
     @PostMapping("/settings/delete-account")
     public String deleteAccount(@RequestParam String email,
                            @RequestParam String password,
-                           RedirectAttributes redirectAttributes) {
-        // TODO: Verify credentials and delete user account
-        // boolean success = userService.deleteAccount(currentUser, email, password);
-        // if (!success) { redirectAttributes.addFlashAttribute("error", "Email or password incorrect."); return "redirect:/settings"; }
-        // TODO: Invalidate session and redirect to goodbye page
-        redirectAttributes.addFlashAttribute("success", "Your account has been deleted.");
-        return "redirect:/settings";
+                           RedirectAttributes redirectAttributes,
+                           HttpServletRequest request,
+                           HttpServletResponse response) {
+        // Verify credentials and delete user account
+        boolean success = userService.deleteAccount(email, password);
+        if (!success) {
+            redirectAttributes.addFlashAttribute("error", "Email or password incorrect.");
+            return "redirect:/settings";
+        }
+        
+        // Invalidate JWT cookie
+        Cookie jwtCookie = new Cookie("jwt", "");
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0);
+        response.addCookie(jwtCookie);
+        
+        redirectAttributes.addFlashAttribute("success", "Your account has been deleted successfully.");
+        return "redirect:/login";
     }
 
     @GetMapping("/settings/export-csv")

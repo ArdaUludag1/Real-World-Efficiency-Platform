@@ -132,4 +132,21 @@ public class UserService {
         userRepository.save(user);
         return true;
     }
+
+    @Transactional
+    public boolean deleteAccount(String email, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) return false;
+        User user = userOpt.get();
+        if (!passwordEncoder.matches(password, user.getPassword())) return false;
+        
+        // Delete all user data first
+        Long userId = user.getId();
+        tripRepository.deleteByUserId(userId);
+        historyRepository.deleteByUser(user);
+        
+        // Finally delete the user
+        userRepository.delete(user);
+        return true;
+    }
 } 
