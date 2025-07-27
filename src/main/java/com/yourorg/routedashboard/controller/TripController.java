@@ -1,9 +1,12 @@
 package com.yourorg.routedashboard.controller;
 
 import com.yourorg.routedashboard.entity.Trip;
+import com.yourorg.routedashboard.entity.User;
 import com.yourorg.routedashboard.repository.TripRepository;
 import com.yourorg.routedashboard.service.VehicleService;
 import com.yourorg.routedashboard.service.LocationWeatherService;
+import com.yourorg.routedashboard.service.UserService;
+import com.yourorg.routedashboard.config.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -16,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
 import java.util.List;
 import java.util.Map;
 
@@ -25,16 +30,43 @@ public class TripController {
     private final VehicleService vehicleService;
     private final LocationWeatherService locationWeatherService;
     private final TripRepository tripRepository;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
     
     // Explicit constructor
-    public TripController(VehicleService vehicleService, LocationWeatherService locationWeatherService, TripRepository tripRepository) {
+    public TripController(VehicleService vehicleService, LocationWeatherService locationWeatherService, 
+                        TripRepository tripRepository, JwtUtil jwtUtil, UserService userService) {
         this.vehicleService = vehicleService;
         this.locationWeatherService = locationWeatherService;
         this.tripRepository = tripRepository;
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+    }
+    
+    // Helper method to get current user from JWT token
+    private User getCurrentUser(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (jwtUtil.validateToken(token)) {
+                        String username = jwtUtil.getUsernameFromToken(token);
+                        return userService.getUserByUsername(username).orElse(null);
+                    }
+                }
+            }
+        }
+        return null;
     }
     
     @GetMapping("/trips")
-    public String tripsPage(Model model) {
+    public String tripsPage(Model model, HttpServletRequest request) {
+        // Get current user
+        User currentUser = getCurrentUser(request);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        
         // Get dynamic makes and years from VehicleService
         List<String> makes = vehicleService.getAllMakes();
         List<Integer> years = vehicleService.getAllYears();
@@ -42,6 +74,7 @@ public class TripController {
         model.addAttribute("makes", makes);
         model.addAttribute("years", years);
         model.addAttribute("locationWeatherEnabled", locationWeatherService.isGoogleMapsConfigured() && locationWeatherService.isOpenWeatherConfigured());
+        model.addAttribute("username", currentUser.getUsername());
         
         return "trips";
     }
@@ -55,12 +88,19 @@ public class TripController {
                            @RequestParam String toCity,
                            @RequestParam Double distance,
                            @RequestParam Double fuelConsumption,
-                           Model modelView) {
+                           Model modelView,
+                           HttpServletRequest request) {
         
         try {
+            // Get current user
+            User currentUser = getCurrentUser(request);
+            if (currentUser == null) {
+                return "redirect:/login";
+            }
+            
             // Create a new Trip entity
             Trip trip = new Trip();
-            trip.setUserId(1L); // For now, use user ID 1 (can be updated for multi-user support)
+            trip.setUserId(currentUser.getId()); // Use current user's ID
             trip.setMake(make);
             trip.setModel(model);
             trip.setYear(year);

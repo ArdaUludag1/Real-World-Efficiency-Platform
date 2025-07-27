@@ -30,6 +30,9 @@ public class SettingsController {
     
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private com.yourorg.routedashboard.service.DataLoader dataLoader;
 
     // Helper method to get current user from JWT token
     private User getCurrentUser(HttpServletRequest request) {
@@ -49,6 +52,12 @@ public class SettingsController {
 
     @GetMapping("/settings")
     public String settingsPage(Model model, HttpServletRequest request) {
+        // Get current user
+        User currentUser = getCurrentUser(request);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        
         String theme = "auto";
         String backgroundStyle = "light";
         if (request.getCookies() != null) {
@@ -63,6 +72,7 @@ public class SettingsController {
         }
         model.addAttribute("theme", theme);
         model.addAttribute("backgroundStyle", backgroundStyle);
+        model.addAttribute("username", currentUser.getUsername());
         return "settings";
     }
     
@@ -246,25 +256,13 @@ public class SettingsController {
         return "redirect:/login";
     }
 
-    @GetMapping("/settings/export-csv")
-    public ResponseEntity<byte[]> exportCsv() {
-        // TODO: Generate CSV data for user (trips, vehicles, etc.)
-        String csv = "id,name\n1,Trip1\n2,Trip2"; // Example
-        byte[] data = csv.getBytes(StandardCharsets.UTF_8);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=userdata.csv")
-                .contentType(MediaType.parseMediaType("text/csv"))
-                .body(data);
+    // Debug endpoint to check trip data
+    @GetMapping("/settings/debug-trips")
+    public String debugTrips(RedirectAttributes redirectAttributes) {
+        dataLoader.debugTripData();
+        redirectAttributes.addFlashAttribute("success", "Trip data debug info printed to console.");
+        return "redirect:/settings";
     }
 
-    @GetMapping("/settings/export-json")
-    public ResponseEntity<byte[]> exportJson() {
-        // TODO: Generate JSON data for user (trips, vehicles, etc.)
-        String json = "{\"trips\":[{\"id\":1,\"name\":\"Trip1\"}]}"; // Example
-        byte[] data = json.getBytes(StandardCharsets.UTF_8);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=userdata.json")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(data);
-    }
+
 } 

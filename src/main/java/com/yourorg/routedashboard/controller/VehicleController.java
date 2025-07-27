@@ -1,6 +1,9 @@
 package com.yourorg.routedashboard.controller;
 
 import com.yourorg.routedashboard.service.VehicleService;
+import com.yourorg.routedashboard.entity.User;
+import com.yourorg.routedashboard.service.UserService;
+import com.yourorg.routedashboard.config.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,15 +13,37 @@ import com.yourorg.routedashboard.entity.Vehicle;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/vehicles")
 public class VehicleController {
     private final VehicleService vehicleService;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
 
-    public VehicleController(VehicleService vehicleService) {
+    public VehicleController(VehicleService vehicleService, JwtUtil jwtUtil, UserService userService) {
         this.vehicleService = vehicleService;
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+    }
+    
+    // Helper method to get current user from JWT token
+    private User getCurrentUser(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (jwtUtil.validateToken(token)) {
+                        String username = jwtUtil.getUsernameFromToken(token);
+                        return userService.getUserByUsername(username).orElse(null);
+                    }
+                }
+            }
+        }
+        return null;
     }
     
     // Removed explicit constructor (was duplicate)
@@ -84,9 +109,16 @@ public class VehicleController {
     }
 
     @GetMapping("/cars")
-    public String getAllCars(Model model) {
+    public String getAllCars(Model model, HttpServletRequest request) {
+        // Get current user
+        User currentUser = getCurrentUser(request);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        
         List<Vehicle> vehicles = vehicleService.getAllVehicles();
         model.addAttribute("vehicles", vehicles);
+        model.addAttribute("username", currentUser.getUsername());
         return "cars";
     }
 } 

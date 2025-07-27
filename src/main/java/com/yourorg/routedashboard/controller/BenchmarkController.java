@@ -1,14 +1,19 @@
 package com.yourorg.routedashboard.controller;
 
 import com.yourorg.routedashboard.entity.Trip;
+import com.yourorg.routedashboard.entity.User;
 import com.yourorg.routedashboard.repository.TripRepository;
 import com.yourorg.routedashboard.service.VehicleService;
+import com.yourorg.routedashboard.service.UserService;
+import com.yourorg.routedashboard.config.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,10 +26,37 @@ public class BenchmarkController {
     @Autowired
     private VehicleService vehicleService;
     
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Autowired
+    private UserService userService;
+    
+    // Helper method to get current user from JWT token
+    private User getCurrentUser(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (jwtUtil.validateToken(token)) {
+                        String username = jwtUtil.getUsernameFromToken(token);
+                        return userService.getUserByUsername(username).orElse(null);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
     @GetMapping("/benchmark")
-    public String benchmarkPage(Model model) {
-        // For now, use user ID 1 (can be updated for multi-user support)
-        Long userId = 1L;
+    public String benchmarkPage(Model model, HttpServletRequest request) {
+        // Get current user
+        User currentUser = getCurrentUser(request);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        
+        Long userId = currentUser.getId();
         
         // Get user's trips
         List<Trip> userTrips = tripRepository.findByUserIdOrderByCreatedAtDesc(userId);
@@ -51,15 +83,22 @@ public class BenchmarkController {
         model.addAttribute("totalDistance", Math.round(totalDistance * 10.0) / 10.0);
         model.addAttribute("totalTrips", userTrips.size());
         model.addAttribute("uniqueVehicles", uniqueVehicles);
+        model.addAttribute("username", currentUser.getUsername());
         
         return "benchmark";
     }
     
     @GetMapping("/api/benchmark/trips")
     @ResponseBody
-    public ResponseEntity<List<Map<String, Object>>> getUserTrips() {
+    public ResponseEntity<List<Map<String, Object>>> getUserTrips(HttpServletRequest request) {
         try {
-            Long userId = 1L; // For now, use user ID 1
+            // Get current user
+            User currentUser = getCurrentUser(request);
+            if (currentUser == null) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            Long userId = currentUser.getId();
             List<Trip> userTrips = tripRepository.findByUserIdOrderByCreatedAtDesc(userId);
             
             List<Map<String, Object>> tripsData = userTrips.stream()
