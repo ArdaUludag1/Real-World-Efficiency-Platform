@@ -212,7 +212,11 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <h6>Efficiency Trends</h6>
+                                <h6>Weather Information</h6>
+                                <div id="weatherInfo">
+                                    <p class="text-muted">Select a trip to view weather details</p>
+                                </div>
+                                <h6 class="mt-4">Efficiency Trends</h6>
                                 <div id="efficiencyTrends">
                                     <!-- Efficiency trends will be loaded here -->
                                 </div>
@@ -465,8 +469,14 @@
                             <div>
                                 <small class="text-muted">${new Date(trip.createdAt).toLocaleDateString()}</small><br>
                                 <strong>${trip.fromCity} → ${trip.toCity}</strong>
+                                <br><small class="text-muted">${trip.year} ${trip.make} ${trip.model}</small>
                             </div>
-                            <span class="badge bg-primary">${trip.fuelConsumption} L/100km</span>
+                            <div class="text-end">
+                                <span class="badge bg-primary">${trip.fuelConsumption} L/100km</span>
+                                <br><button class="btn btn-sm btn-outline-info mt-1" onclick="getWeatherForTrip('${trip.fromCity}', '${trip.toCity}')">
+                                    <i class="fas fa-cloud"></i> Weather
+                                </button>
+                            </div>
                         </div>
                     `).join('');
                     
@@ -511,6 +521,99 @@
                 case 'danger': return '<i class="fas fa-exclamation-circle text-danger"></i>';
                 default: return '<i class="fas fa-info-circle text-primary"></i>';
             }
+        }
+        
+        // Weather functions for benchmark page
+        function getWeatherForTrip(fromCity, toCity) {
+            console.log('Getting weather for trip:', fromCity, 'to', toCity);
+            
+            // Show loading state
+            document.getElementById('weatherInfo').innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+                    <p>Loading weather data...</p>
+                </div>
+            `;
+            
+            // Get weather for both cities
+            Promise.all([
+                fetch(`/api/weather?location=${encodeURIComponent(fromCity)}`).then(r => r.json()),
+                fetch(`/api/weather?location=${encodeURIComponent(toCity)}`).then(r => r.json())
+            ])
+            .then(([fromWeather, toWeather]) => {
+                console.log('Weather data received:', { fromWeather, toWeather });
+                
+                if (fromWeather.error || toWeather.error) {
+                    throw new Error(fromWeather.error || toWeather.error || 'Error fetching weather data');
+                }
+                
+                displayWeatherForTrip(fromCity, toCity, fromWeather, toWeather);
+            })
+            .catch(error => {
+                console.error('Error fetching weather data:', error);
+                document.getElementById('weatherInfo').innerHTML = `
+                    <div class="text-center text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h6>Error Loading Weather</h6>
+                        <p>${error.message}</p>
+                        <button class="btn btn-primary btn-sm" onclick="getWeatherForTrip('${fromCity}', '${toCity}')">
+                            <i class="fas fa-redo me-1"></i>Retry
+                        </button>
+                    </div>
+                `;
+            });
+        }
+        
+        function displayWeatherForTrip(fromCity, toCity, fromWeather, toWeather) {
+            const weatherHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>${fromCity}</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <i class="fas fa-thermometer-half fa-2x text-primary mb-2"></i>
+                                    <h5 class="mb-1">${fromWeather.temperature}°C</h5>
+                                    <p class="mb-1"><strong>Weather:</strong> ${fromWeather.description}</p>
+                                    <p class="mb-1"><strong>Humidity:</strong> ${fromWeather.humidity}%</p>
+                                    <p class="mb-0"><strong>Wind:</strong> ${fromWeather.windSpeed} km/h</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>${toCity}</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <i class="fas fa-thermometer-half fa-2x text-success mb-2"></i>
+                                    <h5 class="mb-1">${toWeather.temperature}°C</h5>
+                                    <p class="mb-1"><strong>Weather:</strong> ${toWeather.description}</p>
+                                    <p class="mb-1"><strong>Humidity:</strong> ${toWeather.humidity}%</p>
+                                    <p class="mb-0"><strong>Wind:</strong> ${toWeather.windSpeed} km/h</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearWeatherInfo()">
+                        <i class="fas fa-times me-1"></i>Clear Weather
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('weatherInfo').innerHTML = weatherHtml;
+        }
+        
+        function clearWeatherInfo() {
+            document.getElementById('weatherInfo').innerHTML = `
+                <p class="text-muted">Select a trip to view weather details</p>
+            `;
         }
     </script>
 </body>

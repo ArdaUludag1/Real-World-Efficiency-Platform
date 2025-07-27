@@ -42,16 +42,14 @@ public class HistoryService {
     private Map<String, Object> convertToMap(History history) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", history.getId());
-        map.put("make", history.getVehicle().getMake());
-        map.put("model", history.getVehicle().getModel());
-        map.put("year", history.getVehicle().getYear());
+        map.put("tripId", history.getTripId());
+        map.put("make", history.getMake());
+        map.put("model", history.getModel());
+        map.put("year", history.getYear());
         map.put("fromCity", history.getFromCity());
         map.put("toCity", history.getToCity());
         map.put("distance", history.getDistanceKm());
-        map.put("baseConsumption", history.getBaseConsumptionL());
-        map.put("adjustedConsumption", history.getAdjustedConsumptionL());
-        map.put("weatherFrom", history.getWeatherFrom());
-        map.put("weatherTo", history.getWeatherTo());
+        map.put("fuelConsumption", history.getFuelConsumptionActual());
         map.put("createdAt", history.getCreatedAt());
         return map;
     }

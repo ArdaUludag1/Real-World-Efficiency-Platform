@@ -244,14 +244,13 @@ public class RouteService {
                 if (vehicle.getId() != null) {
                     History history = History.builder()
                         .user(user)
-                        .vehicle(vehicle)
+                        .make(vehicle.getMake())
+                        .model(vehicle.getModel())
+                        .year(vehicle.getYear())
                         .fromCity(request.getFromCity())
                         .toCity(request.getToCity())
                         .distanceKm(response.getDistance())
-                        .baseConsumptionL(response.getBaseConsumption())
-                        .adjustedConsumptionL(response.getAdjustedConsumption())
-                        .weatherFrom(response.getWeatherFrom())
-                        .weatherTo(response.getWeatherTo())
+                        .fuelConsumptionActual(response.getAdjustedConsumption())
                         .build();
                     
                     historyRepository.save(history);

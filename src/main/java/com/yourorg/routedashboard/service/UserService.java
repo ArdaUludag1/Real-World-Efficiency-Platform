@@ -106,7 +106,7 @@ public class UserService {
         Long userId = user.getId();
         tripRepository.deleteByUserId(userId);
         // Do NOT delete vehicles, as they are global/factory data
-        historyRepository.deleteByUser(user);
+        // Do NOT delete history, as it serves as audit trail
         return true;
     }
 
@@ -143,7 +143,7 @@ public class UserService {
         // Delete all user data first
         Long userId = user.getId();
         tripRepository.deleteByUserId(userId);
-        historyRepository.deleteByUser(user);
+        // Do NOT delete history, as it serves as audit trail
         
         // Finally delete the user
         userRepository.delete(user);

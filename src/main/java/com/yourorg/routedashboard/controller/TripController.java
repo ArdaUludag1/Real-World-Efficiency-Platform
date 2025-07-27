@@ -2,7 +2,9 @@ package com.yourorg.routedashboard.controller;
 
 import com.yourorg.routedashboard.entity.Trip;
 import com.yourorg.routedashboard.entity.User;
+import com.yourorg.routedashboard.entity.History;
 import com.yourorg.routedashboard.repository.TripRepository;
+import com.yourorg.routedashboard.repository.HistoryRepository;
 import com.yourorg.routedashboard.service.VehicleService;
 import com.yourorg.routedashboard.service.LocationWeatherService;
 import com.yourorg.routedashboard.service.UserService;
@@ -30,15 +32,18 @@ public class TripController {
     private final VehicleService vehicleService;
     private final LocationWeatherService locationWeatherService;
     private final TripRepository tripRepository;
+    private final HistoryRepository historyRepository;
     private final JwtUtil jwtUtil;
     private final UserService userService;
     
     // Explicit constructor
     public TripController(VehicleService vehicleService, LocationWeatherService locationWeatherService, 
-                        TripRepository tripRepository, JwtUtil jwtUtil, UserService userService) {
+                        TripRepository tripRepository, HistoryRepository historyRepository, 
+                        JwtUtil jwtUtil, UserService userService) {
         this.vehicleService = vehicleService;
         this.locationWeatherService = locationWeatherService;
         this.tripRepository = tripRepository;
+        this.historyRepository = historyRepository;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
     }
@@ -113,6 +118,30 @@ public class TripController {
             tripRepository.save(trip);
             
             System.out.println("TripController: Trip saved successfully - ID: " + trip.getId());
+            
+            // Automatically save to history for backup/audit trail
+            System.out.println("TripController: Creating history record for trip ID: " + trip.getId());
+            
+            try {
+                History history = History.builder()
+                        .tripId(trip.getId())
+                        .user(currentUser)
+                        .make(trip.getMake())
+                        .model(trip.getModel())
+                        .year(trip.getYear())
+                        .fromCity(trip.getFromCity())
+                        .toCity(trip.getToCity())
+                        .distanceKm(trip.getDistanceKm())
+                        .fuelConsumptionActual(trip.getFuelConsumptionActual())
+                        .build();
+                
+                System.out.println("TripController: History object created successfully");
+                historyRepository.save(history);
+                System.out.println("TripController: History record saved successfully - ID: " + history.getId());
+            } catch (Exception e) {
+                System.err.println("TripController: Error saving history: " + e.getMessage());
+                e.printStackTrace();
+            }
             
             // Redirect to dashboard to show the new trip in recent trips
             return "redirect:/dashboard?tripAdded=true";

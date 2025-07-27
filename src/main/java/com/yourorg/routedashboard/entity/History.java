@@ -15,13 +15,21 @@ public class History {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "trip_id")
+    private Long tripId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+    @Column(name = "make", nullable = false, length = 50)
+    private String make;
+
+    @Column(name = "model", nullable = false, length = 100)
+    private String model;
+
+    @Column(name = "year", nullable = false)
+    private Integer year;
 
     @Column(name = "from_city", nullable = false, length = 100)
     private String fromCity;
@@ -32,17 +40,8 @@ public class History {
     @Column(name = "distance_km", nullable = false)
     private Double distanceKm;
 
-    @Column(name = "base_consumption_l", nullable = false)
-    private Double baseConsumptionL;
-
-    @Column(name = "adjusted_consumption_l", nullable = false)
-    private Double adjustedConsumptionL;
-
-    @Column(name = "weather_from", length = 255)
-    private String weatherFrom;
-
-    @Column(name = "weather_to", length = 255)
-    private String weatherTo;
+    @Column(name = "fuel_consumption_actual", nullable = false)
+    private Double fuelConsumptionActual;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -56,11 +55,20 @@ public class History {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
+    public Long getTripId() { return tripId; }
+    public void setTripId(Long tripId) { this.tripId = tripId; }
+    
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
     
-    public Vehicle getVehicle() { return vehicle; }
-    public void setVehicle(Vehicle vehicle) { this.vehicle = vehicle; }
+    public String getMake() { return make; }
+    public void setMake(String make) { this.make = make; }
+    
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
+    
+    public Integer getYear() { return year; }
+    public void setYear(Integer year) { this.year = year; }
     
     public String getFromCity() { return fromCity; }
     public void setFromCity(String fromCity) { this.fromCity = fromCity; }
@@ -71,17 +79,8 @@ public class History {
     public Double getDistanceKm() { return distanceKm; }
     public void setDistanceKm(Double distanceKm) { this.distanceKm = distanceKm; }
     
-    public Double getBaseConsumptionL() { return baseConsumptionL; }
-    public void setBaseConsumptionL(Double baseConsumptionL) { this.baseConsumptionL = baseConsumptionL; }
-    
-    public Double getAdjustedConsumptionL() { return adjustedConsumptionL; }
-    public void setAdjustedConsumptionL(Double adjustedConsumptionL) { this.adjustedConsumptionL = adjustedConsumptionL; }
-    
-    public String getWeatherFrom() { return weatherFrom; }
-    public void setWeatherFrom(String weatherFrom) { this.weatherFrom = weatherFrom; }
-    
-    public String getWeatherTo() { return weatherTo; }
-    public void setWeatherTo(String weatherTo) { this.weatherTo = weatherTo; }
+    public Double getFuelConsumptionActual() { return fuelConsumptionActual; }
+    public void setFuelConsumptionActual(Double fuelConsumptionActual) { this.fuelConsumptionActual = fuelConsumptionActual; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -93,19 +92,24 @@ public class History {
     
     public static class HistoryBuilder {
         private Long id;
+        private Long tripId;
         private User user;
-        private Vehicle vehicle;
+        private String make;
+        private String model;
+        private Integer year;
         private String fromCity;
         private String toCity;
         private Double distanceKm;
-        private Double baseConsumptionL;
-        private Double adjustedConsumptionL;
-        private String weatherFrom;
-        private String weatherTo;
+        private Double fuelConsumptionActual;
         private LocalDateTime createdAt;
         
         public HistoryBuilder id(Long id) {
             this.id = id;
+            return this;
+        }
+        
+        public HistoryBuilder tripId(Long tripId) {
+            this.tripId = tripId;
             return this;
         }
         
@@ -114,8 +118,18 @@ public class History {
             return this;
         }
         
-        public HistoryBuilder vehicle(Vehicle vehicle) {
-            this.vehicle = vehicle;
+        public HistoryBuilder make(String make) {
+            this.make = make;
+            return this;
+        }
+        
+        public HistoryBuilder model(String model) {
+            this.model = model;
+            return this;
+        }
+        
+        public HistoryBuilder year(Integer year) {
+            this.year = year;
             return this;
         }
         
@@ -134,23 +148,8 @@ public class History {
             return this;
         }
         
-        public HistoryBuilder baseConsumptionL(Double baseConsumptionL) {
-            this.baseConsumptionL = baseConsumptionL;
-            return this;
-        }
-        
-        public HistoryBuilder adjustedConsumptionL(Double adjustedConsumptionL) {
-            this.adjustedConsumptionL = adjustedConsumptionL;
-            return this;
-        }
-        
-        public HistoryBuilder weatherFrom(String weatherFrom) {
-            this.weatherFrom = weatherFrom;
-            return this;
-        }
-        
-        public HistoryBuilder weatherTo(String weatherTo) {
-            this.weatherTo = weatherTo;
+        public HistoryBuilder fuelConsumptionActual(Double fuelConsumptionActual) {
+            this.fuelConsumptionActual = fuelConsumptionActual;
             return this;
         }
         
@@ -162,15 +161,15 @@ public class History {
         public History build() {
             History history = new History();
             history.id = this.id;
+            history.tripId = this.tripId;
             history.user = this.user;
-            history.vehicle = this.vehicle;
+            history.make = this.make;
+            history.model = this.model;
+            history.year = this.year;
             history.fromCity = this.fromCity;
             history.toCity = this.toCity;
             history.distanceKm = this.distanceKm;
-            history.baseConsumptionL = this.baseConsumptionL;
-            history.adjustedConsumptionL = this.adjustedConsumptionL;
-            history.weatherFrom = this.weatherFrom;
-            history.weatherTo = this.weatherTo;
+            history.fuelConsumptionActual = this.fuelConsumptionActual;
             history.createdAt = this.createdAt;
             return history;
         }
