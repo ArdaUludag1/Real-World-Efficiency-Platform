@@ -1,0 +1,38 @@
+package com.yourorg.realworldefficiency.controller;
+
+import com.yourorg.realworldefficiency.dto.RouteRequest;
+import com.yourorg.realworldefficiency.dto.RouteResponse;
+import com.yourorg.realworldefficiency.service.RouteService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/route")
+public class RouteController {
+    private final RouteService routeService;
+
+    public RouteController(RouteService routeService) {
+        this.routeService = routeService;
+    }
+
+    @PostMapping
+    public ResponseEntity<?> calculateRoute(@Valid @RequestBody RouteRequest request) {
+        try {
+            RouteResponse response = routeService.calculateRoute(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("Route calculation error: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Route calculation failed");
+            errorResponse.put("message", e.getMessage());
+            
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+} 
