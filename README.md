@@ -110,7 +110,7 @@ real-efficiency-platform/
 
 ## Coding Standards
 - Java 17, Spring Boot best practices
-- Lombok annotations (optional)
+- Lombok annotations 
 - Exception handling (@ControllerAdvice)
 - Javadoc for public methods/services
 - Descriptive naming, 4-space indentation, structured and clean codebase
